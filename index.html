@@ -1037,8 +1037,7 @@
   <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
 
   <script>
-    // Injetado automaticamente via GitHub Actions Secret (GEMINI_API_KEY)
-    const GEMINI_API_KEY = "__GEMINI_API_KEY__";
+    const GEMINI_API_URL = "https://tracksheet-studio.vercel.app/api/gemini";
 
     /* =========================================================================
        ESTADO INICIAL E ESTRUTURA DE DADOS
@@ -2171,7 +2170,7 @@ ${author ? `Canal: "${author}"` : ""}
 ${videoUrl ? `Link do vídeo: ${videoUrl}` : ""}
 Responda somente JSON válido no formato {"minutes": 3, "seconds": 45}. Se não souber com certeza, retorne {"minutes": 0, "seconds": 0}.`;
 
-        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+        const endpoint = `${GEMINI_API_URL}`;
         const res = await fetchWithTimeout(
           endpoint,
           {
@@ -2197,7 +2196,7 @@ Responda somente JSON válido no formato {"minutes": 3, "seconds": 45}. Se não 
       }
     }
 
-    const YOUTUBE_DURATION_API = "https://tracksheet-studio-ciels-projects-9299fbb3.vercel.app/api/youtube-duration";
+    const YOUTUBE_DURATION_API = "https://tracksheet-studio.vercel.app/api/youtube-duration";
     const youtubeMetadataCache = new Map();
 
     async function fetchYoutubeMetadataBatch(videoIds) {
@@ -3258,10 +3257,10 @@ Responda somente JSON válido no formato {"minutes": 3, "seconds": 45}. Se não 
     }
 
     /* =========================================================================
-       INTEGRAÇÃO GEMINI AI (VIA GITHUB SECRETS)
+       INTEGRAÇÃO GEMINI AI (VIA BACKEND VERCEL)
        ========================================================================= */
     function isGeminiKeyConfigured() {
-      return Boolean(GEMINI_API_KEY && GEMINI_API_KEY.trim() !== "" && !GEMINI_API_KEY.includes("__GEMINI_API_KEY__"));
+      return true; // A chave fica protegida no backend Vercel.
     }
 
     function openAiHubModal() {
@@ -3332,7 +3331,7 @@ Para cada faixa, preencha com precisão:
 Faixas para analisar e preencher:
 ${JSON.stringify(payloadTracks)}`;
 
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+      const endpoint = `${GEMINI_API_URL}`;
 
       const res = await fetch(endpoint, {
         method: "POST",
@@ -3449,7 +3448,7 @@ ${JSON.stringify(payloadTracks)}`;
           <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200 space-y-2">
             <p class="font-bold text-sm">Chave GEMINI_API_KEY não injetada neste ambiente</p>
             <p class="text-xs leading-relaxed">
-              Para proteger sua chave, ela não fica visível na interface nem no código-fonte público. Configure o Secret <code class="font-mono px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/10">GEMINI_API_KEY</code> nas configurações do seu repositório GitHub e publique via GitHub Actions para ativar a IA automaticamente.
+              A chave fica protegida no backend do Vercel e não é enviada ao navegador.
             </p>
           </div>
         `;
