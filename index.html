@@ -963,7 +963,7 @@
       </div>
 
       <!-- Controles de Execução -->
-      <div class="px-6 py-3.5 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900">
+      <div class="px-6 py-3.5 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
         <div class="flex flex-wrap items-center gap-3 text-xs">
           <label class="inline-flex items-center gap-2 cursor-pointer select-none font-medium text-slate-700 dark:text-slate-200">
             <input id="ai-auto-fill-empty-chk" type="checkbox" checked class="rounded text-violet-600 focus:ring-violet-500" />
@@ -995,7 +995,7 @@
         <div class="text-center py-10 px-4 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 space-y-2">
           <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">Pronto para analisar sua lista</p>
           <p class="max-w-lg mx-auto">
-            Clique em <strong>"Analisar Lista com Gemini AI"</strong> acima para preencher todas as músicas de uma vez, ou clique no botão <strong>🤖 AI</strong> dentro de qualquer faixa individual.
+            Clique em <strong>"Analisar Lista com Gemini AI"</strong> para preencher todas as músicas de uma vez, ou clique em <strong>🤖 AI</strong> em qualquer faixa individual.
           </p>
           <p class="text-[11px] text-slate-400">
             O Gemini preenche Tempo, Tipo, Estilo, BPM, Vibe, Energia, Licença real (Copyright vs. Creative Commons/Livre), +Info e aponta possíveis correções nos campos já preenchidos.
@@ -1033,8 +1033,8 @@
   <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
 
   <script>
-    //API AQUI 👇🏻
-    const GEMINI_API_KEY = "";
+    // Injetado automaticamente via GitHub Actions Secret (GEMINI_API_KEY)
+    const GEMINI_API_KEY = "__GEMINI_API_KEY__";
 
     /* =========================================================================
        ESTADO INICIAL E ESTRUTURA DE DADOS
@@ -1309,7 +1309,7 @@
         list.sort((a, b) => {
           const da = getTrackDurationSeconds(a);
           const db = getTrackDurationSeconds(b);
-          if (da === db) return (a.order - b.order);
+          if (da === db) return a.order - b.order;
           return (da - db) * dirMult;
         });
       } else if (sortBy === "title") {
@@ -1537,19 +1537,19 @@
                       min="0"
                       max="999"
                       value="${escapeHtml(track.minutes)}"
-                      onchange="updateTrackDuration('${track.id}', 'minutes', this.value)"
+                      onchange="updateTrackTime('${track.id}', 'minutes', this.value)"
                       placeholder="min"
-                      class="w-full px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 font-mono text-center text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                      class="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 font-mono text-center text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
                     />
-                    <span class="font-mono font-bold text-slate-400">:</span>
+                    <span class="font-bold text-slate-400">:</span>
                     <input
                       type="number"
                       min="0"
                       max="59"
                       value="${escapeHtml(track.seconds)}"
-                      onchange="updateTrackDuration('${track.id}', 'seconds', this.value)"
+                      onchange="updateTrackTime('${track.id}', 'seconds', this.value)"
                       placeholder="seg"
-                      class="w-full px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 font-mono text-center text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                      class="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 font-mono text-center text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
                     />
                   </div>
                 </div>
@@ -1562,8 +1562,8 @@
                     list="tipo-suggestions"
                     value="${escapeHtml(track.type)}"
                     onchange="updateTrackField('${track.id}', 'type', this.value)"
-                    placeholder="Vocal, Instrumental, OST..."
-                    class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                    placeholder="Ex: Vocal, Instrumental..."
+                    class="w-full px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
                   />
                 </div>
 
@@ -1575,161 +1575,126 @@
                     list="estilo-suggestions"
                     value="${escapeHtml(track.style)}"
                     onchange="updateTrackField('${track.id}', 'style', this.value)"
-                    placeholder="Soul / Jazz, Lo-Fi, Game OST..."
-                    class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                    placeholder="Ex: Soul / Jazz, OST..."
+                    class="w-full px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
                   />
                 </div>
 
-                <!-- +Info / Observações -->
+                <!-- +Info -->
                 <div class="sm:col-span-3">
-                  <label class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">+Info / Notas</label>
+                  <label class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">+Info / Observações</label>
                   <input
                     type="text"
                     value="${escapeHtml(track.info)}"
                     onchange="updateTrackField('${track.id}', 'info', this.value)"
-                    placeholder="Observações livres..."
-                    class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                    placeholder="Notas, álbum, uso..."
+                    class="w-full px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
                   />
                 </div>
               </div>
 
-              <!-- Gaveta de Recursos Extras (+10 Metadados) -->
-              ${
-                track.showExtras
-                  ? `
-                <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-2.5 text-xs">
-                  <!-- 1. BPM -->
-                  <div>
-                    <label class="block text-[11px] font-medium text-indigo-600 dark:text-indigo-400 mb-1">BPM</label>
+              <!-- Gaveta de Metadados Extras (+10 Recursos) -->
+              <div class="${track.showExtras ? "block" : "hidden"} mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5 text-xs">
+                <!-- BPM -->
+                <div class="lg:col-span-2">
+                  <label class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">BPM</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="350"
+                    value="${escapeHtml(track.bpm)}"
+                    onchange="updateTrackField('${track.id}', 'bpm', this.value)"
+                    placeholder="Ex: 120"
+                    class="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 font-mono text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                  />
+                </div>
+
+                <!-- Vibe / Mood -->
+                <div class="lg:col-span-2">
+                  <label class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">Vibe / Mood</label>
+                  <input
+                    type="text"
+                    value="${escapeHtml(track.mood)}"
+                    onchange="updateTrackField('${track.id}', 'mood', this.value)"
+                    placeholder="Ex: Chill, Épico..."
+                    class="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                  />
+                </div>
+
+                <!-- Trecho (Cue) -->
+                <div class="lg:col-span-2">
+                  <label class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">Trecho (Cue)</label>
+                  <input
+                    type="text"
+                    value="${escapeHtml(track.cue)}"
+                    onchange="updateTrackField('${track.id}', 'cue', this.value)"
+                    placeholder="Ex: 01:15"
+                    class="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 font-mono text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                  />
+                </div>
+
+                <!-- Energia (1-5) -->
+                <div class="lg:col-span-1">
+                  <label class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">Energia</label>
+                  <select
+                    onchange="updateTrackField('${track.id}', 'energy', this.value)"
+                    class="w-full px-2 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40 cursor-pointer"
+                  >
+                    <option value="" ${!track.energy ? "selected" : ""}>—</option>
+                    <option value="1" ${track.energy === "1" ? "selected" : ""}>1</option>
+                    <option value="2" ${track.energy === "2" ? "selected" : ""}>2</option>
+                    <option value="3" ${track.energy === "3" ? "selected" : ""}>3</option>
+                    <option value="4" ${track.energy === "4" ? "selected" : ""}>4</option>
+                    <option value="5" ${track.energy === "5" ? "selected" : ""}>5</option>
+                  </select>
+                </div>
+
+                <!-- Licença -->
+                <div class="lg:col-span-2">
+                  <label class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">Licença</label>
+                  <input
+                    type="text"
+                    value="${escapeHtml(track.license)}"
+                    onchange="updateTrackField('${track.id}', 'license', this.value)"
+                    placeholder="Ex: Copyright, CC..."
+                    class="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                  />
+                </div>
+
+                <!-- Link URL -->
+                <div class="lg:col-span-2">
+                  <label class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">Link / URL</label>
+                  <div class="flex items-center gap-1">
                     <input
-                      type="number"
-                      min="20"
-                      max="350"
-                      value="${escapeHtml(track.bpm)}"
-                      onchange="updateTrackField('${track.id}', 'bpm', this.value)"
-                      placeholder="Ex: 120"
-                      class="w-full px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 font-mono text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                      type="url"
+                      value="${escapeHtml(track.link)}"
+                      onchange="updateTrackField('${track.id}', 'link', this.value)"
+                      placeholder="https://..."
+                      class="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
                     />
-                  </div>
-
-                  <!-- 2. Vibe / Mood -->
-                  <div>
-                    <label class="block text-[11px] font-medium text-indigo-600 dark:text-indigo-400 mb-1">Vibe / Mood</label>
-                    <select
-                      onchange="updateTrackField('${track.id}', 'mood', this.value)"
-                      class="w-full px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
-                    >
-                      <option value="" ${!track.mood ? "selected" : ""}>(Em branco)</option>
-                      ${[
-                        "Melancólico",
-                        "Nostálgico",
-                        "Relaxante / Chill",
-                        "Energético",
-                        "Épico / Cinematográfico",
-                        "Sombrio / Tenso",
-                        "Alegre / Leve"
-                      ]
-                        .map(
-                          m =>
-                            `<option value="${m}" ${track.mood === m ? "selected" : ""}>${m}</option>`
-                        )
-                        .join("")}
-                      ${
-                        track.mood &&
-                        ![
-                          "Melancólico",
-                          "Nostálgico",
-                          "Relaxante / Chill",
-                          "Energético",
-                          "Épico / Cinematográfico",
-                          "Sombrio / Tenso",
-                          "Alegre / Leve"
-                        ].includes(track.mood)
-                          ? `<option value="${escapeHtml(track.mood)}" selected>${escapeHtml(track.mood)}</option>`
-                          : ""
-                      }
-                    </select>
-                  </div>
-
-                  <!-- 3. Trecho (Cue) -->
-                  <div>
-                    <label class="block text-[11px] font-medium text-indigo-600 dark:text-indigo-400 mb-1">Trecho (Cue)</label>
-                    <input
-                      type="text"
-                      value="${escapeHtml(track.cue)}"
-                      onchange="updateTrackField('${track.id}', 'cue', this.value)"
-                      placeholder="Ex: 01:15"
-                      class="w-full px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 font-mono text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
-                    />
-                  </div>
-
-                  <!-- 4. Energia (1-5) -->
-                  <div>
-                    <label class="block text-[11px] font-medium text-indigo-600 dark:text-indigo-400 mb-1">Energia (1-5)</label>
-                    <select
-                      onchange="updateTrackField('${track.id}', 'energy', this.value)"
-                      class="w-full px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
-                    >
-                      <option value="" ${!track.energy ? "selected" : ""}>(Em branco)</option>
-                      <option value="1" ${String(track.energy) === "1" ? "selected" : ""}>1 — Muito Calma</option>
-                      <option value="2" ${String(track.energy) === "2" ? "selected" : ""}>2 — Suave</option>
-                      <option value="3" ${String(track.energy) === "3" ? "selected" : ""}>3 — Moderada</option>
-                      <option value="4" ${String(track.energy) === "4" ? "selected" : ""}>4 — Alta</option>
-                      <option value="5" ${String(track.energy) === "5" ? "selected" : ""}>5 — Máxima</option>
-                    </select>
-                  </div>
-
-                  <!-- 5. Licença -->
-                  <div>
-                    <label class="block text-[11px] font-medium text-indigo-600 dark:text-indigo-400 mb-1">Licença</label>
-                    <input
-                      type="text"
-                      value="${escapeHtml(track.license)}"
-                      onchange="updateTrackField('${track.id}', 'license', this.value)"
-                      placeholder="Copyright, CC, Livre..."
-                      class="w-full px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
-                    />
-                  </div>
-
-                  <!-- 7. Status -->
-                  <div>
-                    <label class="block text-[11px] font-medium text-emerald-600 dark:text-emerald-400 mb-1">Status</label>
-                    <select
-                      onchange="updateTrackField('${track.id}', 'status', this.value)"
-                      class="w-full px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
-                    >
-                      <option value="" ${!track.status ? "selected" : ""}>(Em branco)</option>
-                      ${["Pendente", "Em Edição", "Aprovada", "Descartada"]
-                        .map(
-                          s =>
-                            `<option value="${s}" ${track.status === s ? "selected" : ""}>${s}</option>`
-                        )
-                        .join("")}
-                    </select>
-                  </div>
-
-                  <!-- 6. Link -->
-                  <div>
-                    <label class="block text-[11px] font-medium text-emerald-600 dark:text-emerald-400 mb-1">Link / URL</label>
-                    <div class="flex items-center gap-1">
-                      <input
-                        type="url"
-                        value="${escapeHtml(track.link)}"
-                        onchange="updateTrackField('${track.id}', 'link', this.value)"
-                        placeholder="https://..."
-                        class="w-full px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
-                      />
-                      ${
-                        track.link
-                          ? `<a href="${escapeHtml(track.link)}" target="_blank" rel="noopener noreferrer" title="Abrir link em nova aba" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 shrink-0">↗</a>`
-                          : ""
-                      }
-                    </div>
+                    ${
+                      track.link
+                        ? `<a href="${escapeHtml(track.link)}" target="_blank" rel="noopener noreferrer" title="Abrir link" class="p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-emerald-500 shrink-0">↗</a>`
+                        : ""
+                    }
                   </div>
                 </div>
-              `
-                  : ""
-              }
+
+                <!-- Status -->
+                <div class="lg:col-span-1">
+                  <label class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">Status</label>
+                  <select
+                    onchange="updateTrackField('${track.id}', 'status', this.value)"
+                    class="w-full px-2 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40 cursor-pointer"
+                  >
+                    <option value="" ${!track.status ? "selected" : ""}>—</option>
+                    <option value="Pendente" ${track.status === "Pendente" ? "selected" : ""}>Pendente</option>
+                    <option value="Em Edição" ${track.status === "Em Edição" ? "selected" : ""}>Em Edição</option>
+                    <option value="Aprovada" ${track.status === "Aprovada" ? "selected" : ""}>Aprovada</option>
+                    <option value="Descartada" ${track.status === "Descartada" ? "selected" : ""}>Descartada</option>
+                  </select>
+                </div>
+              </div>
             </article>
           `;
         })
@@ -1739,59 +1704,57 @@
     /* =========================================================================
        AÇÕES CRUD DAS FAIXAS
        ========================================================================= */
-    function addNewTrack(prefill = null, focusTitle = true) {
+    function addNewTrack(prefill = {}) {
       pushUndo();
-      const maxOrder = tracks.reduce((acc, t) => Math.max(acc, t.order || 0), -1);
+      const maxOrder = tracks.reduce((max, t) => Math.max(max, t.order), -1);
       const newTrack = {
-        ...createEmptyTrack("", maxOrder + 1),
-        ...(prefill || {})
+        ...createEmptyTrack(prefill.title || "", maxOrder + 1),
+        ...prefill
       };
       tracks.push(newTrack);
       saveState();
       renderTracks();
-
-      if (focusTitle) {
-        setTimeout(() => {
-          const card = document.querySelector(`[data-track-id="${newTrack.id}"] input[type="text"]`);
-          if (card) card.focus();
-        }, 40);
-      }
+      showToast("Nova faixa adicionada.", "success");
       return newTrack;
     }
 
     function updateTrackField(id, field, value) {
-      const idx = tracks.findIndex(t => t.id === id);
-      if (idx === -1) return;
+      const track = tracks.find(t => t.id === id);
+      if (!track) return;
       pushUndo();
-      tracks[idx][field] = value;
+      track[field] = value;
       saveState();
-      if (field === "link") {
+      if (field === "link" || field === "title" || field === "favorite") {
         renderTracks();
       } else {
         updateStats();
       }
     }
 
-    function updateTrackDuration(id, unit, rawVal) {
-      const idx = tracks.findIndex(t => t.id === id);
-      if (idx === -1) return;
+    function updateTrackTime(id, unit, value) {
+      const track = tracks.find(t => t.id === id);
+      if (!track) return;
       pushUndo();
-      const cleaned = String(rawVal ?? "").trim();
-      if (!cleaned) {
-        tracks[idx][unit] = "";
+      const clean = String(value ?? "").trim();
+      if (clean === "") {
+        track[unit] = "";
       } else {
-        let num = parseInt(cleaned, 10);
+        let num = parseInt(clean, 10);
         if (!Number.isFinite(num) || num < 0) num = 0;
         if (unit === "seconds" && num > 59) {
           const extraMins = Math.floor(num / 60);
-          num = num % 60;
-          const curMins = parseInt(tracks[idx].minutes, 10) || 0;
-          tracks[idx].minutes = String(curMins + extraMins);
+          const remSecs = num % 60;
+          const curMins = parseInt(track.minutes, 10) || 0;
+          track.minutes = String(curMins + extraMins);
+          track.seconds = String(remSecs);
+          renderTracks();
+          saveState();
+          return;
         }
-        tracks[idx][unit] = unit === "seconds" ? String(num).padStart(2, "0") : String(num);
+        track[unit] = String(num);
       }
       saveState();
-      renderTracks();
+      updateStats();
     }
 
     function toggleFavorite(id) {
@@ -1811,18 +1774,32 @@
       renderTracks();
     }
 
-    function duplicateTrack(id) {
-      const idx = tracks.findIndex(t => t.id === id);
-      if (idx === -1) return;
+    function moveTrack(id, direction) {
+      if (sortBy !== "manual") return;
+      const ordered = [...tracks].sort((a, b) => a.order - b.order);
+      const idx = ordered.findIndex(t => t.id === id);
+      const swapIdx = idx + direction;
+      if (idx < 0 || swapIdx < 0 || swapIdx >= ordered.length) return;
       pushUndo();
-      const orig = tracks[idx];
+      const tempOrder = ordered[idx].order;
+      ordered[idx].order = ordered[swapIdx].order;
+      ordered[swapIdx].order = tempOrder;
+      saveState();
+      renderTracks();
+    }
+
+    function duplicateTrack(id) {
+      const original = tracks.find(t => t.id === id);
+      if (!original) return;
+      pushUndo();
+      const maxOrder = tracks.reduce((max, t) => Math.max(max, t.order), -1);
       const copy = {
-        ...JSON.parse(JSON.stringify(orig)),
+        ...JSON.parse(JSON.stringify(original)),
         id: "trk_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
-        title: orig.title ? `${orig.title} (Cópia)` : ""
+        order: maxOrder + 1,
+        title: original.title ? `${original.title} (Cópia)` : ""
       };
-      tracks.splice(idx + 1, 0, copy);
-      tracks.forEach((t, i) => (t.order = i));
+      tracks.push(copy);
       saveState();
       renderTracks();
       showToast("Faixa duplicada.", "success");
@@ -1832,49 +1809,30 @@
       const track = tracks.find(t => t.id === id);
       if (!track) return;
       pushUndo();
-      const preservedTitle = track.title;
-      const preservedOrder = track.order;
-      const preservedId = track.id;
-      Object.assign(track, createEmptyTrack(preservedTitle, preservedOrder), { id: preservedId });
+      const keepTitle = track.title;
+      const keepId = track.id;
+      const keepOrder = track.order;
+      Object.assign(track, createEmptyTrack(keepTitle, keepOrder), { id: keepId });
       saveState();
       renderTracks();
       showToast("Campos da faixa limpos.", "info");
     }
 
     function deleteTrack(id) {
-      const idx = tracks.findIndex(t => t.id === id);
-      if (idx === -1) return;
       pushUndo();
-      tracks.splice(idx, 1);
-      tracks.forEach((t, i) => (t.order = i));
+      tracks = tracks.filter(t => t.id !== id);
       saveState();
       renderTracks();
-      showToast("Faixa removida (Ctrl+Z para desfazer).", "info");
-    }
-
-    function moveTrack(id, delta) {
-      const ordered = [...tracks].sort((a, b) => a.order - b.order);
-      const idx = ordered.findIndex(t => t.id === id);
-      const targetIdx = idx + delta;
-      if (idx === -1 || targetIdx < 0 || targetIdx >= ordered.length) return;
-      pushUndo();
-      const [moved] = ordered.splice(idx, 1);
-      ordered.splice(targetIdx, 0, moved);
-      ordered.forEach((t, i) => (t.order = i));
-      tracks = ordered;
-      saveState();
-      renderTracks();
+      showToast("Faixa removida.", "info");
     }
 
     /* =========================================================================
-       BUSCA, ORDENAÇÃO E FILTROS
+       CONTROLES DE BUSCA, ORDENAÇÃO E MODAIS AUXILIARES
        ========================================================================= */
     function handleSearchInput(val) {
-      searchQuery = val || "";
+      searchQuery = val;
       const clearBtn = document.getElementById("clear-search-btn");
-      if (clearBtn) {
-        clearBtn.classList.toggle("hidden", !searchQuery.trim());
-      }
+      if (clearBtn) clearBtn.classList.toggle("hidden", !val);
       renderTracks();
     }
 
@@ -1895,9 +1853,7 @@
     function toggleSortDirection() {
       sortDir = sortDir === "asc" ? "desc" : "asc";
       const label = document.getElementById("sort-dir-label");
-      if (label) {
-        label.textContent = sortDir === "asc" ? "↑ Crescente" : "↓ Decrescente";
-      }
+      if (label) label.textContent = sortDir === "asc" ? "↑ Crescente" : "↓ Decrescente";
       renderTracks();
     }
 
@@ -1906,638 +1862,6 @@
       renderTracks();
     }
 
-    /* =========================================================================
-       SUGESTÃO INTELIGENTE PELO TÍTULO (VARINHA MÁGICA)
-       ========================================================================= */
-    function inferMetadataFromTitle(title, author = "") {
-      const text = `${title} ${author}`.toLowerCase();
-      const result = {
-        type: "",
-        style: "",
-        mood: "",
-        license: ""
-      };
-
-      // Tipo
-      if (/\b(remix|edit|bootleg|flip|mashup|sped up|slowed)\b/.test(text)) {
-        result.type = "Remix / Edit";
-      } else if (/\b(instrumental|karaoke|backing track)\b/.test(text)) {
-        result.type = "Instrumental";
-      } else if (/\b(ost|soundtrack|theme|boss|stage|game|nintendo|mario|zelda|animal crossing|undertale|persona)\b/.test(text)) {
-        result.type = "Trilha Sonora (OST)";
-      } else if (/\b(lofi|lo-fi|beat|type beat)\b/.test(text)) {
-        result.type = "Lo-Fi / Beat";
-      } else if (/\b(acapella|a capella)\b/.test(text)) {
-        result.type = "Acapella";
-      } else if (/\b(sfx|sound effect|efeito)\b/.test(text)) {
-        result.type = "Efeito Sonoro";
-      } else if (title.trim()) {
-        result.type = "Vocal";
-      }
-
-      // Estilo
-      if (/\b(lofi|lo-fi|chillhop|massobeats|study)\b/.test(text)) {
-        result.style = "Chillhop / Lo-Fi";
-      } else if (/\b(synthwave|retrowave|outrun|80s|blade runner|cyberpunk)\b/.test(text)) {
-        result.style = "Synthwave / Retrowave";
-      } else if (/\b(ost|soundtrack|mario|zelda|animal crossing|sonic|pokemon|undertale)\b/.test(text)) {
-        result.style = "Game OST";
-      } else if (/\b(jazz|soul|sax|amy winehouse|bossa)\b/.test(text)) {
-        result.style = "Soul / Jazz";
-      } else if (/\b(hip hop|hip-hop|rap|trap|tyler|kendrick|drake|kanye)\b/.test(text)) {
-        result.style = "Hip-Hop / Rap";
-      } else if (/\b(phonk|edm|house|techno|electronic|dubstep|dnb)\b/.test(text)) {
-        result.style = "Eletrônica / Phonk";
-      } else if (/\b(orchestral|classical|piano|violin|symphony|kevin macleod)\b/.test(text)) {
-        result.style = "Orquestral / Clássico";
-      } else if (/\b(pop|r&b|rnb)\b/.test(text)) {
-        result.style = "Pop / R&B";
-      }
-
-      // Vibe / Mood
-      if (/\b(sad|melanchol|cry|tears|temporary|alone|dark|bluebird)\b/.test(text)) {
-        result.mood = "Melancólico";
-      } else if (/\b(nostalg|memory|retro|80s|90s|childhood|1pm)\b/.test(text)) {
-        result.mood = "Nostálgico";
-      } else if (/\b(chill|relax|calm|sleep|study|honey|lofi|lo-fi)\b/.test(text)) {
-        result.mood = "Relaxante / Chill";
-      } else if (/\b(epic|cinematic|trailer|boss|battle)\b/.test(text)) {
-        result.mood = "Épico / Cinematográfico";
-      } else if (/\b(happy|sunny|upbeat|boom|dance|party|donk)\b/.test(text)) {
-        result.mood = "Alegre / Leve";
-      } else if (/\b(phonk|hype|energy|fast|workout)\b/.test(text)) {
-        result.mood = "Energético";
-      }
-
-      // Licença
-      if (/\b(kevin macleod|incompetech|no copyright|ncs|royalty free|creative commons|cc-by|massobeats)\b/.test(text)) {
-        result.license = "Creative Commons / Livre";
-      } else if (title.trim()) {
-        result.license = "Copyright / Comercial";
-      }
-
-      return result;
-    }
-
-    function autoDetectSingleTrack(id) {
-      const track = tracks.find(t => t.id === id);
-      if (!track || !track.title.trim()) {
-        showToast("Digite um título antes de usar a sugestão.", "warning");
-        return;
-      }
-      pushUndo();
-      const inferred = inferMetadataFromTitle(track.title);
-      let updated = 0;
-      ["type", "style", "mood", "license"].forEach(field => {
-        if (!String(track[field] || "").trim() && inferred[field]) {
-          track[field] = inferred[field];
-          updated++;
-        }
-      });
-      saveState();
-      renderTracks();
-      if (updated > 0) {
-        showToast(`${updated} campo(s) preenchido(s) pelo título!`, "success");
-      } else {
-        showToast("Nenhum campo vazio novo para sugerir nesta faixa.", "info");
-      }
-    }
-
-    function autoDetectAllFromTitles() {
-      if (tracks.length === 0) {
-        showToast("Adicione faixas primeiro.", "warning");
-        return;
-      }
-      pushUndo();
-      let totalFields = 0;
-      tracks.forEach(track => {
-        if (!track.title.trim()) return;
-        const inferred = inferMetadataFromTitle(track.title);
-        ["type", "style", "mood", "license"].forEach(field => {
-          if (!String(track[field] || "").trim() && inferred[field]) {
-            track[field] = inferred[field];
-            totalFields++;
-          }
-        });
-      });
-      saveState();
-      renderTracks();
-      showToast(`${totalFields} campo(s) vazio(s) preenchido(s) automaticamente!`, "success");
-    }
-
-    /* =========================================================================
-       YOUTUBE: EXTRAÇÃO DE ID, METADADOS E DURAÇÃO SEM ERROS DE CORS/POSTMESSAGE
-       ========================================================================= */
-    function extractYoutubeVideoId(url) {
-      if (!url) return null;
-      const str = String(url).trim();
-      const patterns = [
-        /(?:youtube\.com\/watch\?.*v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/shorts\/|music\.youtube\.com\/watch\?.*v=)([a-zA-Z0-9_-]{11})/,
-        /^([a-zA-Z0-9_-]{11})$/
-      ];
-      for (const rx of patterns) {
-        const match = str.match(rx);
-        if (match && match[1]) return match[1];
-      }
-      return null;
-    }
-
-    function extractYoutubeStartTime(url) {
-      if (!url) return "";
-      const match = String(url).match(/[?&#](?:t|start)=([0-9hms]+)/i);
-      if (!match) return "";
-      const raw = match[1];
-      if (/^\d+$/.test(raw)) {
-        return secondsToMMSS(parseInt(raw, 10));
-      }
-      const h = (raw.match(/(\d+)h/i) || [])[1] || 0;
-      const m = (raw.match(/(\d+)m/i) || [])[1] || 0;
-      const s = (raw.match(/(\d+)s/i) || [])[1] || 0;
-      const total = parseInt(h, 10) * 3600 + parseInt(m, 10) * 60 + parseInt(s, 10);
-      return total > 0 ? secondsToMMSS(total) : "";
-    }
-
-    function ensureYoutubeIframeApi() {
-      return new Promise(resolve => {
-        if (window.YT && window.YT.Player) {
-          ytApiReady = true;
-          resolve(true);
-          return;
-        }
-        const existing = document.getElementById("yt-iframe-api-script");
-        if (!existing) {
-          const tag = document.createElement("script");
-          tag.id = "yt-iframe-api-script";
-          tag.src = "https://www.youtube.com/iframe_api";
-          document.head.appendChild(tag);
-        }
-        const prevReady = window.onYouTubeIframeAPIReady;
-        window.onYouTubeIframeAPIReady = function () {
-          ytApiReady = true;
-          if (typeof prevReady === "function") prevReady();
-          resolve(true);
-        };
-        setTimeout(() => resolve(Boolean(window.YT && window.YT.Player)), 3500);
-      });
-    }
-
-    function probeYoutubeDurationViaPlayer(videoId) {
-      return new Promise(async resolve => {
-        const apiLoaded = await ensureYoutubeIframeApi();
-        if (!apiLoaded || !window.YT || !window.YT.Player) {
-          resolve(0);
-          return;
-        }
-
-        const host = document.createElement("div");
-        host.style.cssText = "position:fixed;left:-9999px;top:-9999px;width:160px;height:90px;opacity:0;pointer-events:none;";
-        const mount = document.createElement("div");
-        host.appendChild(mount);
-        document.body.appendChild(host);
-
-        let done = false;
-        let player = null;
-        const finish = secs => {
-          if (done) return;
-          done = true;
-          try {
-            if (player && typeof player.destroy === "function") player.destroy();
-          } catch (e) {}
-          host.remove();
-          resolve(secs > 0 ? Math.round(secs) : 0);
-        };
-
-        const timeout = setTimeout(() => finish(0), 5000);
-
-        const playerVars = {
-          autoplay: 0,
-          controls: 0,
-          mute: 1,
-          playsinline: 1
-        };
-        if (window.location.protocol === "http:" || window.location.protocol === "https:") {
-          playerVars.origin = window.location.origin;
-        }
-
-        try {
-          player = new window.YT.Player(mount, {
-            videoId,
-            playerVars,
-            events: {
-              onReady: ev => {
-                try {
-                  const d = ev.target.getDuration();
-                  if (d && d > 0) {
-                    clearTimeout(timeout);
-                    finish(d);
-                  }
-                } catch (e) {}
-              },
-              onError: () => {
-                clearTimeout(timeout);
-                finish(0);
-              }
-            }
-          });
-        } catch (err) {
-          clearTimeout(timeout);
-          finish(0);
-        }
-      });
-    }
-
-    async function fetchYoutubeDurationFromHtmlProxy(videoId) {
-      const targetUrl = `https://www.youtube.com/watch?v=${videoId}`;
-      const endpoints = [
-        async () => {
-          const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`);
-          if (!res.ok) return 0;
-          const data = await res.json();
-          const html = data && data.contents ? data.contents : "";
-          const m = html.match(/"lengthSeconds":"(\d+)"/);
-          return m ? parseInt(m[1], 10) : 0;
-        },
-        async () => {
-          const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`);
-          if (!res.ok) return 0;
-          const html = await res.text();
-          const m = html.match(/"lengthSeconds":"(\d+)"/);
-          return m ? parseInt(m[1], 10) : 0;
-        }
-      ];
-
-      for (const fn of endpoints) {
-        try {
-          const secs = await fn();
-          if (secs > 0) return secs;
-        } catch (e) {
-          // Tenta próximo endpoint
-        }
-      }
-      return 0;
-    }
-
-    async function fetchYoutubeMetadata(url) {
-      const videoId = extractYoutubeVideoId(url);
-      if (!videoId) return null;
-
-      const cleanUrl = `https://www.youtube.com/watch?v=${videoId}`;
-      const cue = extractYoutubeStartTime(url);
-      let title = "";
-      let author = "";
-
-      try {
-        const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(cleanUrl)}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data && data.title) title = data.title.trim();
-          if (data && data.author_name) author = data.author_name.trim();
-        }
-      } catch (e) {
-        // Fallback silencioso
-      }
-
-      // Limpa sufixos comuns de YouTube no título
-      const cleanedTitle = title
-        .replace(/\s*\((Official\s*(Music\s*)?Video|Official\s*Audio|Lyrics?|Visualizer|HD|4K)\)/gi, "")
-        .replace(/\s*\[(Official\s*(Music\s*)?Video|Official\s*Audio|Lyrics?|Visualizer|HD|4K)\]/gi, "")
-        .trim();
-
-      let durationSeconds = await fetchYoutubeDurationFromHtmlProxy(videoId);
-      if (!durationSeconds) {
-        durationSeconds = await probeYoutubeDurationViaPlayer(videoId);
-      }
-
-      const inferred = inferMetadataFromTitle(cleanedTitle || title, author);
-
-      return {
-        videoId,
-        link: cleanUrl,
-        title: cleanedTitle || title || `YouTube (${videoId})`,
-        author,
-        durationSeconds,
-        cue,
-        ...inferred
-      };
-    }
-
-    function normalizeTitleForMatch(str) {
-      return String(str || "")
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z0-9\s]/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-    }
-
-    function findMatchingTrack(meta) {
-      // 1. Correspondência exata pelo ID do vídeo no link
-      const byId = tracks.find(t => extractYoutubeVideoId(t.link) === meta.videoId);
-      if (byId) return byId;
-
-      // 2. Correspondência por similaridade de título
-      const normMeta = normalizeTitleForMatch(meta.title);
-      if (!normMeta) return null;
-
-      return (
-        tracks.find(t => {
-          const normTrack = normalizeTitleForMatch(t.title);
-          if (!normTrack) return false;
-          return normTrack === normMeta || normTrack.includes(normMeta) || normMeta.includes(normTrack);
-        }) || null
-      );
-    }
-
-    function applyYoutubeMetaToTrack(track, meta) {
-      if (!String(track.title || "").trim() && meta.title) track.title = meta.title;
-      if (!String(track.link || "").trim() && meta.link) track.link = meta.link;
-
-      if (meta.durationSeconds > 0 && getTrackDurationSeconds(track) === 0) {
-        track.minutes = String(Math.floor(meta.durationSeconds / 60));
-        track.seconds = String(meta.durationSeconds % 60).padStart(2, "0");
-      }
-
-      if (!String(track.type || "").trim() && meta.type) track.type = meta.type;
-      if (!String(track.style || "").trim() && meta.style) track.style = meta.style;
-      if (!String(track.mood || "").trim() && meta.mood) track.mood = meta.mood;
-      if (!String(track.license || "").trim() && meta.license) track.license = meta.license;
-      if (!String(track.cue || "").trim() && meta.cue) track.cue = meta.cue;
-      if (!String(track.info || "").trim() && meta.author) track.info = `Canal: ${meta.author}`;
-    }
-
-    function setYoutubeStatus(visible, text = "") {
-      const bar = document.getElementById("yt-status-bar");
-      const label = document.getElementById("yt-status-text");
-      if (!bar || !label) return;
-      bar.classList.toggle("hidden", !visible);
-      if (text) label.textContent = text;
-    }
-
-    function toggleYoutubeBatchMode() {
-      ytBatchMode = !ytBatchMode;
-      const singleBox = document.getElementById("yt-single-box");
-      const batchBox = document.getElementById("yt-batch-box");
-      const toggleBtn = document.getElementById("toggle-batch-yt-btn");
-      if (singleBox) singleBox.classList.toggle("hidden", ytBatchMode);
-      if (batchBox) batchBox.classList.toggle("hidden", !ytBatchMode);
-      if (toggleBtn) {
-        toggleBtn.textContent = ytBatchMode ? "Modo 1 Link" : "Modo Vários Links";
-      }
-    }
-
-    function handleYoutubePaste(event) {
-      const pasted = (event.clipboardData || window.clipboardData)?.getData("text") || "";
-      const lines = pasted
-        .split(/\r?\n/)
-        .map(l => l.trim())
-        .filter(Boolean);
-
-      if (lines.length > 1) {
-        event.preventDefault();
-        if (!ytBatchMode) toggleYoutubeBatchMode();
-        const ta = document.getElementById("yt-batch-textarea");
-        if (ta) {
-          ta.value = lines.join("\n");
-          processYoutubeBatchInput();
-        }
-        return;
-      }
-
-      if (extractYoutubeVideoId(pasted)) {
-        setTimeout(() => processYoutubeUrlInput(), 60);
-      }
-    }
-
-    async function processYoutubeUrlInput() {
-      const input = document.getElementById("yt-url-input");
-      const btn = document.getElementById("yt-fetch-btn");
-      const url = input ? input.value.trim() : "";
-
-      if (!url) {
-        showToast("Cole um link válido do YouTube.", "warning");
-        return;
-      }
-
-      const videoId = extractYoutubeVideoId(url);
-      if (!videoId) {
-        showToast("Link do YouTube não reconhecido.", "error");
-        return;
-      }
-
-      if (btn) btn.disabled = true;
-      setYoutubeStatus(true, "Buscando título, duração e metadados no YouTube...");
-
-      try {
-        const meta = await fetchYoutubeMetadata(url);
-        if (!meta) {
-          showToast("Não foi possível obter os dados deste vídeo.", "error");
-          return;
-        }
-
-        pushUndo();
-        const existing = findMatchingTrack(meta);
-        if (existing) {
-          applyYoutubeMetaToTrack(existing, meta);
-          saveState();
-          renderTracks();
-          showToast(`Faixa "${existing.title}" atualizada!`, "success");
-        } else {
-          const created = addNewTrack({}, false);
-          applyYoutubeMetaToTrack(created, meta);
-          saveState();
-          renderTracks();
-          showToast(`Nova faixa "${created.title}" adicionada!`, "success");
-        }
-
-        if (input) input.value = "";
-      } finally {
-        if (btn) btn.disabled = false;
-        setYoutubeStatus(false);
-      }
-    }
-
-    async function processYoutubeBatchInput() {
-      const ta = document.getElementById("yt-batch-textarea");
-      const btn = document.getElementById("yt-batch-submit-btn");
-      const raw = ta ? ta.value : "";
-
-      const urls = raw
-        .split(/\r?\n/)
-        .map(l => l.trim())
-        .filter(l => extractYoutubeVideoId(l));
-
-      if (urls.length === 0) {
-        showToast("Nenhum link válido do YouTube encontrado nas linhas.", "warning");
-        return;
-      }
-
-      if (btn) btn.disabled = true;
-      setYoutubeStatus(true, `Processando ${urls.length} link(s) do YouTube em paralelo...`);
-
-      try {
-        pushUndo();
-        const results = await Promise.all(urls.map(u => fetchYoutubeMetadata(u)));
-        let added = 0;
-        let updated = 0;
-
-        results.forEach(meta => {
-          if (!meta) return;
-          const existing = findMatchingTrack(meta);
-          if (existing) {
-            applyYoutubeMetaToTrack(existing, meta);
-            updated++;
-          } else {
-            const maxOrder = tracks.reduce((acc, t) => Math.max(acc, t.order || 0), -1);
-            const created = createEmptyTrack("", maxOrder + 1);
-            applyYoutubeMetaToTrack(created, meta);
-            tracks.push(created);
-            added++;
-          }
-        });
-
-        saveState();
-        renderTracks();
-        if (ta) ta.value = "";
-        showToast(`Concluído: ${added} adicionada(s), ${updated} atualizada(s)!`, "success");
-      } finally {
-        if (btn) btn.disabled = false;
-        setYoutubeStatus(false);
-      }
-    }
-
-    async function fillMissingDurationsFromLinks() {
-      const targets = tracks.filter(t => extractYoutubeVideoId(t.link) && getTrackDurationSeconds(t) === 0);
-      if (targets.length === 0) {
-        showToast("Nenhuma faixa com link do YouTube está sem tempo.", "info");
-        return;
-      }
-
-      const btn = document.getElementById("fill-missing-times-btn");
-      if (btn) btn.disabled = true;
-      setYoutubeStatus(true, `Buscando tempos de ${targets.length} faixa(s)...`);
-
-      try {
-        pushUndo();
-        let filled = 0;
-        await Promise.all(
-          targets.map(async track => {
-            const vid = extractYoutubeVideoId(track.link);
-            let secs = await fetchYoutubeDurationFromHtmlProxy(vid);
-            if (!secs) secs = await probeYoutubeDurationViaPlayer(vid);
-            if (secs > 0) {
-              track.minutes = String(Math.floor(secs / 60));
-              track.seconds = String(secs % 60).padStart(2, "0");
-              filled++;
-            }
-          })
-        );
-
-        saveState();
-        renderTracks();
-        showToast(
-          filled > 0
-            ? `${filled} duração(ões) preenchida(s) automaticamente!`
-            : "Não foi possível obter durações adicionais.",
-          filled > 0 ? "success" : "warning"
-        );
-      } finally {
-        if (btn) btn.disabled = false;
-        setYoutubeStatus(false);
-      }
-    }
-
-    /* =========================================================================
-       MINI-PLAYER FLUTUANTE DO YOUTUBE
-       ========================================================================= */
-    async function openMiniPlayer(trackId) {
-      const track = tracks.find(t => t.id === trackId);
-      if (!track) return;
-      const videoId = extractYoutubeVideoId(track.link);
-      if (!videoId) {
-        showToast("Esta faixa não possui um link válido do YouTube.", "warning");
-        return;
-      }
-
-      activeMiniPlayerTrackId = trackId;
-      const card = document.getElementById("yt-mini-player-card");
-      const titleEl = document.getElementById("mini-player-title");
-      if (card) card.classList.remove("hidden");
-      if (titleEl) titleEl.textContent = track.title || videoId;
-
-      renderTracks();
-
-      const apiLoaded = await ensureYoutubeIframeApi();
-      if (!apiLoaded || !window.YT || !window.YT.Player) {
-        const mount = document.getElementById("yt-mini-player-mount");
-        if (mount) {
-          mount.innerHTML = `<iframe class="w-full h-full" src="https://www.youtube.com/embed/${videoId}?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
-        }
-        return;
-      }
-
-      if (miniPlayerInstance && typeof miniPlayerInstance.loadVideoById === "function") {
-        miniPlayerInstance.loadVideoById(videoId);
-        return;
-      }
-
-      const playerVars = { autoplay: 1, playsinline: 1 };
-      if (window.location.protocol === "http:" || window.location.protocol === "https:") {
-        playerVars.origin = window.location.origin;
-      }
-
-      miniPlayerInstance = new window.YT.Player("yt-mini-player-mount", {
-        videoId,
-        playerVars
-      });
-    }
-
-    function closeMiniPlayer() {
-      activeMiniPlayerTrackId = null;
-      const card = document.getElementById("yt-mini-player-card");
-      if (card) card.classList.add("hidden");
-      if (miniPlayerInstance && typeof miniPlayerInstance.stopVideo === "function") {
-        try {
-          miniPlayerInstance.stopVideo();
-        } catch (e) {}
-      }
-      renderTracks();
-    }
-
-    function capturePlayerTimeToTrack(mode) {
-      if (!activeMiniPlayerTrackId || !miniPlayerInstance) return;
-      const track = tracks.find(t => t.id === activeMiniPlayerTrackId);
-      if (!track) return;
-
-      try {
-        if (mode === "duration" && typeof miniPlayerInstance.getDuration === "function") {
-          const total = Math.round(miniPlayerInstance.getDuration() || 0);
-          if (total > 0) {
-            pushUndo();
-            track.minutes = String(Math.floor(total / 60));
-            track.seconds = String(total % 60).padStart(2, "0");
-            saveState();
-            renderTracks();
-            showToast(`Duração ${formatTrackDuration(track)} salva na faixa!`, "success");
-          }
-        } else if (mode === "cue" && typeof miniPlayerInstance.getCurrentTime === "function") {
-          const cur = Math.round(miniPlayerInstance.getCurrentTime() || 0);
-          const cueStr = secondsToMMSS(cur);
-          pushUndo();
-          track.cue = cueStr;
-          track.showExtras = true;
-          saveState();
-          renderTracks();
-          showToast(`Trecho (Cue) ${cueStr} marcado na faixa!`, "success");
-        }
-      } catch (e) {
-        showToast("Aguarde o player iniciar para capturar o tempo.", "warning");
-      }
-    }
-
-    /* =========================================================================
-       EDIÇÃO EM LOTE E COPIAR LINKS
-       ========================================================================= */
     function openBatchEditModal() {
       const modal = document.getElementById("batch-edit-modal");
       if (modal) {
@@ -2561,349 +1885,43 @@
       const statusVal = document.getElementById("batch-status")?.value.trim() || "";
 
       if (!typeVal && !styleVal && !moodVal && !statusVal) {
-        showToast("Preencha ao menos um campo para aplicar.", "warning");
+        closeBatchEditModal();
         return;
       }
 
       pushUndo();
-      let changed = 0;
+      let updated = 0;
       tracks.forEach(t => {
-        if (typeVal && !String(t.type || "").trim()) {
-          t.type = typeVal;
-          changed++;
-        }
-        if (styleVal && !String(t.style || "").trim()) {
-          t.style = styleVal;
-          changed++;
-        }
-        if (moodVal && !String(t.mood || "").trim()) {
-          t.mood = moodVal;
-          changed++;
-        }
-        if (statusVal && !String(t.status || "").trim()) {
-          t.status = statusVal;
-          changed++;
-        }
+        let changed = false;
+        if (typeVal && !t.type) { t.type = typeVal; changed = true; }
+        if (styleVal && !t.style) { t.style = styleVal; changed = true; }
+        if (moodVal && !t.mood) { t.mood = moodVal; changed = true; }
+        if (statusVal && !t.status) { t.status = statusVal; changed = true; }
+        if (changed) updated++;
       });
 
       saveState();
       renderTracks();
       closeBatchEditModal();
-      showToast(`${changed} campo(s) vazio(s) preenchido(s) em lote!`, "success");
+      showToast(`${updated} faixa(s) atualizada(s) nos campos vazios.`, "success");
     }
 
-    function copyAllSavedLinks() {
-      const links = tracks.map(t => String(t.link || "").trim()).filter(Boolean);
-      if (links.length === 0) {
-        showToast("Nenhum link salvo na lista.", "warning");
-        return;
-      }
-      copyTextToClipboard(links.join("\n"));
-      showToast(`${links.length} link(s) copiado(s) para a área de transferência!`, "success");
-    }
-
-    /* =========================================================================
-       IMPORTAÇÃO DE TEXTO OU ARQUIVO (.TXT, .MD, .CSV, .JSON)
-       ========================================================================= */
-    function openPasteTextModal() {
-      const modal = document.getElementById("paste-text-modal");
+    function openHelpModal() {
+      const modal = document.getElementById("help-modal");
       if (modal) {
         modal.classList.remove("hidden");
         modal.classList.add("flex");
       }
     }
 
-    function closePasteTextModal() {
-      const modal = document.getElementById("paste-text-modal");
+    function closeHelpModal() {
+      const modal = document.getElementById("help-modal");
       if (modal) {
         modal.classList.add("hidden");
         modal.classList.remove("flex");
       }
     }
 
-    function loadFileIntoPasteModal(event) {
-      const file = event.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = e => {
-        const ta = document.getElementById("paste-import-textarea");
-        if (ta) {
-          ta.value = String(e.target?.result || "");
-          updatePastePreviewStats();
-        }
-      };
-      reader.readAsText(file, "UTF-8");
-      event.target.value = "";
-    }
-
-    function importAnyTrackFile(event) {
-      const file = event.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = e => {
-        const content = String(e.target?.result || "");
-        const parsed = parseImportedText(content);
-        if (parsed.length === 0) {
-          showToast("Nenhuma faixa válida identificada no arquivo.", "error");
-          return;
-        }
-        applyParsedTracks(parsed, "fill-empty");
-      };
-      reader.readAsText(file, "UTF-8");
-      event.target.value = "";
-    }
-
-    function parseCsvLine(line) {
-      const result = [];
-      let current = "";
-      let inQuotes = false;
-      for (let i = 0; i < line.length; i++) {
-        const ch = line[i];
-        if (ch === '"' && line[i + 1] === '"') {
-          current += '"';
-          i++;
-        } else if (ch === '"') {
-          inQuotes = !inQuotes;
-        } else if ((ch === "," || ch === ";") && !inQuotes) {
-          result.push(current.trim());
-          current = "";
-        } else {
-          current += ch;
-        }
-      }
-      result.push(current.trim());
-      return result;
-    }
-
-    function parseDurationString(str) {
-      const m = String(str || "").match(/(\d+)\s*:\s*(\d{1,2})/);
-      if (!m) return { minutes: "", seconds: "" };
-      return {
-        minutes: String(parseInt(m[1], 10)),
-        seconds: String(parseInt(m[2], 10)).padStart(2, "0")
-      };
-    }
-
-    function parseImportedText(rawText) {
-      const text = String(rawText || "").trim();
-      if (!text) return [];
-
-      // 1. Tenta JSON
-      if (text.startsWith("{") || text.startsWith("[")) {
-        try {
-          const obj = JSON.parse(text);
-          const arr = Array.isArray(obj) ? obj : Array.isArray(obj.tracks) ? obj.tracks : [];
-          if (arr.length > 0) {
-            return arr
-              .filter(item => item && (item.title || item.titulo))
-              .map(item => {
-                const dur = parseDurationString(item.duration || item.tempo || "");
-                return {
-                  title: String(item.title || item.titulo || "").trim(),
-                  minutes: String(item.minutes ?? dur.minutes ?? "").trim(),
-                  seconds: String(item.seconds ?? dur.seconds ?? "").trim(),
-                  type: String(item.type || item.tipo || "").trim(),
-                  style: String(item.style || item.estilo || "").trim(),
-                  info: String(item.info || item.notas || "").trim(),
-                  bpm: String(item.bpm || "").trim(),
-                  mood: String(item.mood || item.vibe || "").trim(),
-                  cue: String(item.cue || item.trecho || "").trim(),
-                  energy: String(item.energy || item.energia || "").trim(),
-                  license: String(item.license || item.licenca || "").trim(),
-                  link: String(item.link || item.url || "").trim(),
-                  status: String(item.status || "").trim(),
-                  favorite: Boolean(item.favorite || item.favorita)
-                };
-              });
-          }
-        } catch (e) {
-          // Segue para outros formatos
-        }
-      }
-
-      const lines = text.split(/\r?\n/);
-
-      // 2. Tenta CSV
-      const firstNonEmpty = lines.find(l => l.trim()) || "";
-      if (/t[íi]tulo|title/i.test(firstNonEmpty) && (firstNonEmpty.includes(",") || firstNonEmpty.includes(";"))) {
-        const headers = parseCsvLine(firstNonEmpty).map(h => h.toLowerCase());
-        const items = [];
-        for (let i = lines.indexOf(firstNonEmpty) + 1; i < lines.length; i++) {
-          if (!lines[i].trim()) continue;
-          const cols = parseCsvLine(lines[i]);
-          const getCol = keys => {
-            const idx = headers.findIndex(h => keys.some(k => h.includes(k)));
-            return idx >= 0 ? cols[idx] || "" : "";
-          };
-          const title = getCol(["título", "titulo", "title", "música", "musica"]);
-          if (!title) continue;
-          const dur = parseDurationString(getCol(["tempo", "duração", "duration"]));
-          items.push({
-            title,
-            minutes: dur.minutes,
-            seconds: dur.seconds,
-            type: getCol(["tipo", "type"]),
-            style: getCol(["estilo", "style"]),
-            info: getCol(["info", "notas"]),
-            bpm: getCol(["bpm"]),
-            mood: getCol(["vibe", "mood"]),
-            cue: getCol(["cue", "trecho"]),
-            energy: getCol(["energia", "energy"]),
-            license: getCol(["licença", "licenca", "license"]),
-            link: getCol(["link", "url"]),
-            status: getCol(["status"]),
-            favorite: /sim|true|★|1/i.test(getCol(["favorit"]))
-          });
-        }
-        if (items.length > 0) return items;
-      }
-
-      // 3. Formato Estruturado (.TXT ou .MD gerado pelo TrackSheet) ou Lista Simples
-      const parsedTracks = [];
-      let current = null;
-
-      for (const rawLine of lines) {
-        const line = rawLine.trim();
-        if (!line || /^===|^---|^TrackSheet|^Total de/i.test(line)) continue;
-
-        const numberedMatch = line.match(/^(?:###\s*)?\d+\.\s*(★\s*)?(.+)$/);
-        if (numberedMatch) {
-          if (current && current.title) parsedTracks.push(current);
-          current = {
-            title: numberedMatch[2].replace(/\*\*/g, "").trim(),
-            minutes: "",
-            seconds: "",
-            type: "",
-            style: "",
-            info: "",
-            bpm: "",
-            mood: "",
-            cue: "",
-            energy: "",
-            license: "",
-            link: "",
-            status: "",
-            favorite: Boolean(numberedMatch[1])
-          };
-          continue;
-        }
-
-        const kvMatch = line.replace(/^[-*]\s*/, "").replace(/\*\*/g, "").match(/^([^:]+):\s*(.*)$/);
-        if (current && kvMatch) {
-          const key = kvMatch[1].trim().toLowerCase();
-          const val = kvMatch[2].trim();
-          if (!val) continue;
-          if (key.includes("tempo") || key.includes("dura")) {
-            const dur = parseDurationString(val);
-            current.minutes = dur.minutes;
-            current.seconds = dur.seconds;
-          } else if (key === "tipo") {
-            current.type = val;
-          } else if (key === "estilo") {
-            current.style = val;
-          } else if (key.includes("info") || key.includes("nota")) {
-            current.info = val;
-          } else if (key === "bpm") {
-            current.bpm = val;
-          } else if (key.includes("vibe") || key.includes("mood")) {
-            current.mood = val;
-          } else if (key.includes("trecho") || key.includes("cue")) {
-            current.cue = val;
-          } else if (key.includes("energia")) {
-            current.energy = val.replace(/[^1-5]/g, "");
-          } else if (key.includes("licen")) {
-            current.license = val;
-          } else if (key === "link" || key === "url") {
-            current.link = val;
-          } else if (key === "status") {
-            current.status = val;
-          }
-          continue;
-        }
-
-        // Linha simples de nome de música
-        if (!current) {
-          parsedTracks.push({
-            title: line,
-            minutes: "",
-            seconds: "",
-            type: "",
-            style: "",
-            info: "",
-            bpm: "",
-            mood: "",
-            cue: "",
-            energy: "",
-            license: "",
-            link: "",
-            status: "",
-            favorite: false
-          });
-        }
-      }
-
-      if (current && current.title) parsedTracks.push(current);
-      return parsedTracks;
-    }
-
-    function updatePastePreviewStats() {
-      const ta = document.getElementById("paste-import-textarea");
-      const badge = document.getElementById("paste-detected-badge");
-      if (!ta || !badge) return;
-      const items = parseImportedText(ta.value);
-      badge.textContent = items.length > 0 ? `${items.length} faixa(s) detectada(s)` : "Nenhuma faixa detectada";
-    }
-
-    function applyParsedTracks(parsedList, mode = "fill-empty") {
-      pushUndo();
-      let updated = 0;
-      let created = 0;
-
-      parsedList.forEach(item => {
-        const norm = normalizeTitleForMatch(item.title);
-        const existing = tracks.find(t => normalizeTitleForMatch(t.title) === norm);
-
-        if (existing) {
-          const fields = ["minutes", "seconds", "type", "style", "info", "bpm", "mood", "cue", "energy", "license", "link", "status"];
-          fields.forEach(f => {
-            if (!item[f]) return;
-            if (mode === "overwrite" || !String(existing[f] || "").trim()) {
-              existing[f] = item[f];
-            }
-          });
-          if (item.favorite) existing.favorite = true;
-          updated++;
-        } else {
-          const maxOrder = tracks.reduce((acc, t) => Math.max(acc, t.order || 0), -1);
-          tracks.push({
-            ...createEmptyTrack(item.title, maxOrder + 1),
-            ...item
-          });
-          created++;
-        }
-      });
-
-      saveState();
-      renderTracks();
-      showToast(`Importado: ${created} nova(s), ${updated} atualizada(s)!`, "success");
-    }
-
-    function confirmPasteTextImport() {
-      const ta = document.getElementById("paste-import-textarea");
-      const mode = document.querySelector('input[name="paste-import-mode"]:checked')?.value || "fill-empty";
-      const parsed = parseImportedText(ta ? ta.value : "");
-      if (parsed.length === 0) {
-        showToast("Cole um texto válido com músicas antes de importar.", "warning");
-        return;
-      }
-      applyParsedTracks(parsed, mode);
-      if (ta) ta.value = "";
-      closePasteTextModal();
-    }
-
-    /* =========================================================================
-       LIMPAR LISTA (RESET MODAL)
-       ========================================================================= */
     function openResetModal() {
       const modal = document.getElementById("reset-modal");
       if (modal) {
@@ -2926,160 +1944,818 @@
       saveState();
       renderTracks();
       closeResetModal();
-      showToast("Lista limpa com sucesso (Ctrl+Z para desfazer).", "info");
+      showToast("Lista limpa com sucesso.", "info");
+    }
+
+    function copyAllSavedLinks() {
+      const links = tracks.map(t => String(t.link || "").trim()).filter(Boolean);
+      if (links.length === 0) {
+        showToast("Nenhum link salvo na lista.", "info");
+        return;
+      }
+      navigator.clipboard.writeText(links.join("\n")).then(() => {
+        showToast(`${links.length} link(s) copiado(s)!`, "success");
+      });
     }
 
     /* =========================================================================
-       GERAÇÃO E EXPORTAÇÃO DE ARQUIVO (.TXT, .MD, .CSV, .JSON)
+       HEURÍSTICA LOCAL DE DETECÇÃO PELO TÍTULO (VARINHA MÁGICA)
+       ========================================================================= */
+    function inferMetadataFromTitle(rawTitle) {
+      const title = String(rawTitle || "").trim();
+      const lower = title.toLowerCase();
+      const result = { type: "", style: "", mood: "", license: "" };
+
+      if (!title) return result;
+
+      // Tipo
+      if (/\b(ost|soundtrack|theme|trilha|score|bgm)\b/.test(lower)) {
+        result.type = "Trilha Sonora (OST)";
+      } else if (/\b(remix|edit|flip|bootleg|mashup|slowed|reverb|sped up)\b/.test(lower)) {
+        result.type = "Remix / Edit";
+      } else if (/\b(instrumental|karaoke|beat|type beat)\b/.test(lower)) {
+        result.type = "Instrumental";
+      } else if (/\b(lofi|lo-fi|chillhop)\b/.test(lower)) {
+        result.type = "Lo-Fi / Beat";
+      } else if (/\b(acapella|a cappella)\b/.test(lower)) {
+        result.type = "Acapella";
+      }
+
+      // Estilo
+      if (/\b(animal crossing|mario|zelda|pokemon|sonic|undertale|game|nintendo|playstation|ost)\b/.test(lower)) {
+        result.style = "Game OST";
+      } else if (/\b(synthwave|retrowave|outrun|cyberpunk|blade runner|80s)\b/.test(lower)) {
+        result.style = "Synthwave / Retrowave";
+      } else if (/\b(lofi|lo-fi|chillhop|massobeats|honey jam)\b/.test(lower)) {
+        result.style = "Chillhop / Lo-Fi";
+      } else if (/\b(soul|jazz|sax|amy winehouse|blues)\b/.test(lower)) {
+        result.style = "Soul / Jazz";
+      } else if (/\b(phonk|electronic|edm|house|techno|dubstep)\b/.test(lower)) {
+        result.style = "Eletrônica / Phonk";
+      } else if (/\b(hip hop|hip-hop|rap|tyler|trap)\b/.test(lower)) {
+        result.style = "Hip-Hop / Rap";
+      } else if (/\b(orchestral|classical|piano|violin|symphony)\b/.test(lower)) {
+        result.style = "Orquestral / Clássico";
+      }
+
+      // Vibe / Mood
+      if (/\b(sad|melancholy|cry|bluebird|temporary|alone|dark)\b/.test(lower)) {
+        result.mood = "Melancólico";
+      } else if (/\b(chill|relax|calm|sleep|study|honey|1pm|2pm)\b/.test(lower)) {
+        result.mood = "Relaxante / Chill";
+      } else if (/\b(epic|boss|battle|final|hero)\b/.test(lower)) {
+        result.mood = "Épico / Cinematográfico";
+      } else if (/\b(nostalgia|nostalgic|memory|retro|90s|80s)\b/.test(lower)) {
+        result.mood = "Nostálgico";
+      }
+
+      // Licença
+      if (/\b(kevin macleod|incompetech|no copyright|ncs|royalty free|creative commons|massobeats)\b/.test(lower)) {
+        result.license = "Royalty-Free / CC";
+      }
+
+      return result;
+    }
+
+    function autoDetectSingleTrack(id) {
+      const track = tracks.find(t => t.id === id);
+      if (!track || !track.title.trim()) {
+        showToast("Digite o título da música primeiro.", "info");
+        return;
+      }
+      const inferred = inferMetadataFromTitle(track.title);
+      pushUndo();
+      let applied = 0;
+      if (!track.type && inferred.type) { track.type = inferred.type; applied++; }
+      if (!track.style && inferred.style) { track.style = inferred.style; applied++; }
+      if (!track.mood && inferred.mood) { track.mood = inferred.mood; applied++; }
+      if (!track.license && inferred.license) { track.license = inferred.license; applied++; }
+
+      saveState();
+      renderTracks();
+      showToast(applied > 0 ? `${applied} campo(s) sugerido(s) pelo título.` : "Nenhuma nova sugestão disponível.", "info");
+    }
+
+    function autoDetectAllFromTitles() {
+      if (tracks.length === 0) return;
+      pushUndo();
+      let totalFields = 0;
+      tracks.forEach(track => {
+        if (!track.title.trim()) return;
+        const inferred = inferMetadataFromTitle(track.title);
+        if (!track.type && inferred.type) { track.type = inferred.type; totalFields++; }
+        if (!track.style && inferred.style) { track.style = inferred.style; totalFields++; }
+        if (!track.mood && inferred.mood) { track.mood = inferred.mood; totalFields++; }
+        if (!track.license && inferred.license) { track.license = inferred.license; totalFields++; }
+      });
+      saveState();
+      renderTracks();
+      showToast(`${totalFields} campo(s) preenchido(s) na lista.`, "success");
+    }
+
+    /* =========================================================================
+       INTEGRAÇÃO YOUTUBE (SMART MATCH, METADADOS & MINI-PLAYER)
+       ========================================================================= */
+    function toggleYoutubeBatchMode() {
+      ytBatchMode = !ytBatchMode;
+      const singleBox = document.getElementById("yt-single-box");
+      const batchBox = document.getElementById("yt-batch-box");
+      const toggleBtn = document.getElementById("toggle-batch-yt-btn");
+      if (singleBox) singleBox.classList.toggle("hidden", ytBatchMode);
+      if (batchBox) batchBox.classList.toggle("hidden", !ytBatchMode);
+      if (toggleBtn) toggleBtn.textContent = ytBatchMode ? "Modo 1 Link" : "Modo Vários Links";
+    }
+
+    function extractYoutubeVideoId(url) {
+      const str = String(url || "").trim();
+      if (!str) return null;
+      const patterns = [
+        /(?:youtube\.com\/watch\?v=|youtube\.com\/watch\?.+&v=)([a-zA-Z0-9_-]{11})/,
+        /youtu\.be\/([a-zA-Z0-9_-]{11})/,
+        /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+        /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/,
+        /music\.youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/
+      ];
+      for (const rx of patterns) {
+        const match = str.match(rx);
+        if (match && match[1]) return match[1];
+      }
+      return null;
+    }
+
+    function extractYoutubeTimestamp(url) {
+      const str = String(url || "").trim();
+      const match = str.match(/[?&](?:t|start)=(\d+)/);
+      if (!match) return "";
+      const secs = parseInt(match[1], 10);
+      if (!Number.isFinite(secs) || secs <= 0) return "";
+      return secondsToMMSS(secs);
+    }
+
+    function cleanYoutubeTitle(rawTitle, authorName = "") {
+      let title = String(rawTitle || "").trim();
+      title = title
+        .replace(/\(Official\s*(Music\s*)?Video\)/gi, "")
+        .replace(/\[Official\s*(Music\s*)?Video\]/gi, "")
+        .replace(/\(Official\s*Audio\)/gi, "")
+        .replace(/\[Official\s*Audio\]/gi, "")
+        .replace(/\(Lyrics?\)/gi, "")
+        .replace(/\[Lyrics?\]/gi, "")
+        .replace(/\(HD\)|\[HD\]|\(4K\)|\[4K\]/gi, "")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+
+      if (authorName && !title.includes("-") && !title.toLowerCase().includes(authorName.toLowerCase())) {
+        const cleanAuthor = authorName.replace(/\s*-\s*Topic$/i, "").trim();
+        if (cleanAuthor) {
+          title = `${cleanAuthor} - ${title}`;
+        }
+      }
+      return title;
+    }
+
+    function normalizeForMatch(str) {
+      return String(str || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\([^)]*\)|\[[^\]]*\]/g, " ")
+        .replace(/[^a-z0-9\s]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function findBestMatchingTrack(ytTitle, videoId) {
+      // 1. Correspondência exata por ID do YouTube no link
+      for (const track of tracks) {
+        if (extractYoutubeVideoId(track.link) === videoId) {
+          return track;
+        }
+      }
+
+      // 2. Correspondência por similaridade de título
+      const normYt = normalizeForMatch(ytTitle);
+      if (!normYt) return null;
+      const ytTokens = new Set(normYt.split(" ").filter(w => w.length > 1));
+
+      let bestTrack = null;
+      let bestScore = 0;
+
+      for (const track of tracks) {
+        const normTrack = normalizeForMatch(track.title);
+        if (!normTrack) continue;
+        if (normTrack === normYt) return track;
+
+        if (normTrack.includes(normYt) || normYt.includes(normTrack)) {
+          const score = 0.85;
+          if (score > bestScore) {
+            bestScore = score;
+            bestTrack = track;
+          }
+          continue;
+        }
+
+        const trackTokens = new Set(normTrack.split(" ").filter(w => w.length > 1));
+        if (trackTokens.size === 0 || ytTokens.size === 0) continue;
+
+        let intersection = 0;
+        trackTokens.forEach(tok => {
+          if (ytTokens.has(tok)) intersection++;
+        });
+        const union = new Set([...trackTokens, ...ytTokens]).size;
+        const jaccard = intersection / union;
+
+        if (jaccard > bestScore) {
+          bestScore = jaccard;
+          bestTrack = track;
+        }
+      }
+
+      return bestScore >= 0.55 ? bestTrack : null;
+    }
+
+    function setYoutubeStatus(visible, text = "") {
+      const bar = document.getElementById("yt-status-bar");
+      const textEl = document.getElementById("yt-status-text");
+      if (!bar) return;
+      bar.classList.toggle("hidden", !visible);
+      if (textEl && text) textEl.textContent = text;
+    }
+
+    async function fetchYoutubeMetadata(videoId) {
+      const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
+      let title = "";
+      let author = "";
+      let durationSeconds = 0;
+
+      // 1. oEmbed oficial (título + canal)
+      try {
+        const oembedRes = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(watchUrl)}&format=json`);
+        if (oembedRes.ok) {
+          const data = await oembedRes.json();
+          title = data.title || "";
+          author = data.author_name || "";
+        }
+      } catch (e) {
+        // Continua para fallbacks
+      }
+
+      // 2. Duração via AllOrigins (parse de lengthSeconds do HTML)
+      if (!durationSeconds) {
+        try {
+          const aoRes = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(watchUrl)}`);
+          if (aoRes.ok) {
+            const aoData = await aoRes.json();
+            const html = aoData.contents || "";
+            const lenMatch = html.match(/"lengthSeconds":"(\d+)"/);
+            if (lenMatch && lenMatch[1]) {
+              durationSeconds = parseInt(lenMatch[1], 10);
+            }
+            if (!title) {
+              const titleMatch = html.match(/<title>(.*?) - YouTube<\/title>/);
+              if (titleMatch && titleMatch[1]) title = titleMatch[1];
+            }
+          }
+        } catch (e) {
+          // Continua para fallback
+        }
+      }
+
+      // 3. Fallback CodeTabs Proxy
+      if (!durationSeconds) {
+        try {
+          const ctRes = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(watchUrl)}`);
+          if (ctRes.ok) {
+            const html = await ctRes.text();
+            const lenMatch = html.match(/"lengthSeconds":"(\d+)"/);
+            if (lenMatch && lenMatch[1]) {
+              durationSeconds = parseInt(lenMatch[1], 10);
+            }
+          }
+        } catch (e) {
+          // Continua para Piped
+        }
+      }
+
+      // 4. Fallback Piped API
+      if (!durationSeconds) {
+        const pipedHosts = ["https://pipedapi.kavin.rocks", "https://pipedapi.tokhmi.xyz"];
+        for (const host of pipedHosts) {
+          try {
+            const pRes = await fetch(`${host}/streams/${videoId}`);
+            if (pRes.ok) {
+              const pData = await pRes.json();
+              if (pData.duration && pData.duration > 0) {
+                durationSeconds = Math.round(pData.duration);
+              }
+              if (!title && pData.title) title = pData.title;
+              if (!author && pData.uploader) author = pData.uploader;
+              if (durationSeconds) break;
+            }
+          } catch (e) {
+            // Próximo host
+          }
+        }
+      }
+
+      // 5. Fallback via YT IFrame Probe (rápido se incorporável)
+      if (!durationSeconds) {
+        durationSeconds = await probeYoutubeDurationViaIframe(videoId);
+      }
+
+      return {
+        videoId,
+        cleanUrl: watchUrl,
+        title: cleanYoutubeTitle(title, author) || `YouTube (${videoId})`,
+        author,
+        durationSeconds
+      };
+    }
+
+    function loadYoutubeIframeApi() {
+      return new Promise(resolve => {
+        if (ytApiReady && window.YT && window.YT.Player) {
+          resolve(true);
+          return;
+        }
+        const existing = document.querySelector('script[src="https://www.youtube.com/iframe_api"]');
+        if (!existing) {
+          const tag = document.createElement("script");
+          tag.src = "https://www.youtube.com/iframe_api";
+          document.head.appendChild(tag);
+        }
+        const prevCallback = window.onYouTubeIframeAPIReady;
+        window.onYouTubeIframeAPIReady = () => {
+          ytApiReady = true;
+          if (typeof prevCallback === "function") prevCallback();
+          resolve(true);
+        };
+        setTimeout(() => {
+          if (window.YT && window.YT.Player) {
+            ytApiReady = true;
+            resolve(true);
+          } else {
+            resolve(false);
+          }
+        }, 3500);
+      });
+    }
+
+    async function probeYoutubeDurationViaIframe(videoId) {
+      const slot = document.getElementById("yt-live-probe-slot");
+      if (!slot) return 0;
+
+      const loaded = await loadYoutubeIframeApi();
+      if (!loaded) return 0;
+
+      return new Promise(resolve => {
+        let settled = false;
+        const mountId = "probe_" + videoId + "_" + Math.random().toString(36).slice(2, 6);
+        slot.innerHTML = `<div id="${mountId}"></div>`;
+        slot.classList.remove("hidden");
+
+        const cleanup = (dur = 0) => {
+          if (settled) return;
+          settled = true;
+          try { player.destroy(); } catch (e) {}
+          slot.innerHTML = "";
+          slot.classList.add("hidden");
+          resolve(dur);
+        };
+
+        const timer = setTimeout(() => cleanup(0), 4000);
+
+        const playerVars = { autoplay: 0, controls: 0, mute: 1 };
+        if (window.location.protocol.startsWith("http")) {
+          playerVars.origin = window.location.origin;
+        }
+
+        const player = new YT.Player(mountId, {
+          height: "64",
+          width: "112",
+          videoId,
+          playerVars,
+          events: {
+            onReady: ev => {
+              try {
+                const dur = Math.round(ev.target.getDuration() || 0);
+                clearTimeout(timer);
+                cleanup(dur);
+              } catch (e) {
+                clearTimeout(timer);
+                cleanup(0);
+              }
+            },
+            onError: () => {
+              clearTimeout(timer);
+              cleanup(0);
+            }
+          }
+        });
+      });
+    }
+
+    async function processSingleYoutubeLink(rawUrl, silentToast = false) {
+      const videoId = extractYoutubeVideoId(rawUrl);
+      if (!videoId) return { status: "invalid" };
+
+      const cueFromUrl = extractYoutubeTimestamp(rawUrl);
+      const meta = await fetchYoutubeMetadata(videoId);
+      const inferred = inferMetadataFromTitle(meta.title);
+
+      const mins = meta.durationSeconds > 0 ? String(Math.floor(meta.durationSeconds / 60)) : "";
+      const secs = meta.durationSeconds > 0 ? String(meta.durationSeconds % 60) : "";
+
+      const matched = findBestMatchingTrack(meta.title, videoId);
+      if (matched) {
+        if (!matched.title.trim()) matched.title = meta.title;
+        if (!matched.link) matched.link = meta.cleanUrl;
+        if (!matched.minutes && !matched.seconds && (mins || secs)) {
+          matched.minutes = mins;
+          matched.seconds = secs;
+        }
+        if (!matched.type && inferred.type) matched.type = inferred.type;
+        if (!matched.style && inferred.style) matched.style = inferred.style;
+        if (!matched.mood && inferred.mood) matched.mood = inferred.mood;
+        if (!matched.license && inferred.license) matched.license = inferred.license;
+        if (!matched.cue && cueFromUrl) matched.cue = cueFromUrl;
+
+        if (!silentToast) {
+          showToast(`Atualizada na lista: "${matched.title}"`, "success");
+        }
+        return { status: "matched", track: matched };
+      } else {
+        const maxOrder = tracks.reduce((max, t) => Math.max(max, t.order), -1);
+        const created = createEmptyTrack(meta.title, maxOrder + 1);
+        created.link = meta.cleanUrl;
+        created.minutes = mins;
+        created.seconds = secs;
+        created.type = inferred.type;
+        created.style = inferred.style;
+        created.mood = inferred.mood;
+        created.license = inferred.license;
+        created.cue = cueFromUrl;
+        tracks.push(created);
+
+        if (!silentToast) {
+          showToast(`Nova faixa adicionada: "${created.title}"`, "success");
+        }
+        return { status: "created", track: created };
+      }
+    }
+
+    function handleYoutubePaste(event) {
+      setTimeout(() => {
+        const input = document.getElementById("yt-url-input");
+        if (input && extractYoutubeVideoId(input.value)) {
+          processYoutubeUrlInput();
+        }
+      }, 60);
+    }
+
+    async function processYoutubeUrlInput() {
+      const input = document.getElementById("yt-url-input");
+      const btn = document.getElementById("yt-fetch-btn");
+      if (!input) return;
+
+      const raw = input.value.trim();
+      if (!raw) {
+        showToast("Cole um link do YouTube primeiro.", "info");
+        return;
+      }
+
+      if (!extractYoutubeVideoId(raw)) {
+        showToast("Link do YouTube inválido.", "error");
+        return;
+      }
+
+      if (btn) btn.disabled = true;
+      setYoutubeStatus(true, "Buscando título e duração do vídeo no YouTube...");
+      pushUndo();
+
+      try {
+        await processSingleYoutubeLink(raw, false);
+        input.value = "";
+        saveState();
+        renderTracks();
+      } finally {
+        if (btn) btn.disabled = false;
+        setYoutubeStatus(false);
+      }
+    }
+
+    async function processYoutubeBatchInput() {
+      const textarea = document.getElementById("yt-batch-textarea");
+      const btn = document.getElementById("yt-batch-submit-btn");
+      if (!textarea) return;
+
+      const lines = textarea.value
+        .split(/\r?\n/)
+        .map(l => l.trim())
+        .filter(Boolean);
+
+      const validUrls = lines.filter(l => extractYoutubeVideoId(l));
+      if (validUrls.length === 0) {
+        showToast("Nenhum link válido do YouTube encontrado.", "error");
+        return;
+      }
+
+      if (btn) btn.disabled = true;
+      pushUndo();
+      let createdCount = 0;
+      let matchedCount = 0;
+
+      try {
+        for (let i = 0; i < validUrls.length; i += 3) {
+          const chunk = validUrls.slice(i, i + 3);
+          setYoutubeStatus(true, `Processando links ${i + 1} a ${Math.min(i + 3, validUrls.length)} de ${validUrls.length}...`);
+          const results = await Promise.all(chunk.map(u => processSingleYoutubeLink(u, true)));
+          results.forEach(r => {
+            if (r.status === "created") createdCount++;
+            if (r.status === "matched") matchedCount++;
+          });
+          saveState();
+          renderTracks();
+        }
+
+        textarea.value = "";
+        showToast(`Concluído: ${createdCount} criada(s), ${matchedCount} atualizada(s).`, "success");
+      } finally {
+        if (btn) btn.disabled = false;
+        setYoutubeStatus(false);
+      }
+    }
+
+    async function fillMissingDurationsFromLinks() {
+      const targets = tracks.filter(t => extractYoutubeVideoId(t.link) && getTrackDurationSeconds(t) <= 0);
+      if (targets.length === 0) {
+        showToast("Todas as faixas com link do YouTube já possuem tempo!", "info");
+        return;
+      }
+
+      const btn = document.getElementById("fill-missing-times-btn");
+      if (btn) btn.disabled = true;
+      pushUndo();
+      let updated = 0;
+
+      try {
+        for (let i = 0; i < targets.length; i++) {
+          const t = targets[i];
+          const vid = extractYoutubeVideoId(t.link);
+          setYoutubeStatus(true, `Buscando tempo (${i + 1}/${targets.length}): ${t.title || vid}...`);
+          const meta = await fetchYoutubeMetadata(vid);
+          if (meta.durationSeconds > 0) {
+            t.minutes = String(Math.floor(meta.durationSeconds / 60));
+            t.seconds = String(meta.durationSeconds % 60);
+            updated++;
+          }
+        }
+        saveState();
+        renderTracks();
+        showToast(`${updated} tempo(s) preenchido(s) automaticamente.`, updated > 0 ? "success" : "info");
+      } finally {
+        if (btn) btn.disabled = false;
+        setYoutubeStatus(false);
+      }
+    }
+
+    /* =========================================================================
+       MINI-PLAYER FLUTUANTE DO YOUTUBE
+       ========================================================================= */
+    async function openMiniPlayer(trackId) {
+      const track = tracks.find(t => t.id === trackId);
+      if (!track) return;
+      const videoId = extractYoutubeVideoId(track.link);
+      if (!videoId) {
+        showToast("Esta faixa não possui um link válido do YouTube.", "error");
+        return;
+      }
+
+      activeMiniPlayerTrackId = trackId;
+      renderTracks();
+
+      const card = document.getElementById("yt-mini-player-card");
+      const titleEl = document.getElementById("mini-player-title");
+      const mountEl = document.getElementById("yt-mini-player-mount");
+
+      if (titleEl) titleEl.textContent = track.title || videoId;
+      if (card) card.classList.remove("hidden");
+
+      const loaded = await loadYoutubeIframeApi();
+      if (!loaded) {
+        if (mountEl) {
+          mountEl.innerHTML = `<iframe class="w-full h-full" src="https://www.youtube.com/embed/${videoId}?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+        }
+        return;
+      }
+
+      if (miniPlayerInstance) {
+        try { miniPlayerInstance.destroy(); } catch (e) {}
+        miniPlayerInstance = null;
+      }
+
+      if (mountEl) {
+        mountEl.innerHTML = `<div id="yt-mini-iframe-target" class="w-full h-full"></div>`;
+      }
+
+      const playerVars = { autoplay: 1, rel: 0 };
+      if (window.location.protocol.startsWith("http")) {
+        playerVars.origin = window.location.origin;
+      }
+
+      miniPlayerInstance = new YT.Player("yt-mini-iframe-target", {
+        height: "100%",
+        width: "100%",
+        videoId,
+        playerVars
+      });
+    }
+
+    function closeMiniPlayer() {
+      const card = document.getElementById("yt-mini-player-card");
+      if (card) card.classList.add("hidden");
+      if (miniPlayerInstance) {
+        try { miniPlayerInstance.destroy(); } catch (e) {}
+        miniPlayerInstance = null;
+      }
+      activeMiniPlayerTrackId = null;
+      renderTracks();
+    }
+
+    function capturePlayerTimeToTrack(mode) {
+      if (!activeMiniPlayerTrackId || !miniPlayerInstance) {
+        showToast("Abra uma faixa no Mini-Player primeiro.", "info");
+        return;
+      }
+      const track = tracks.find(t => t.id === activeMiniPlayerTrackId);
+      if (!track) return;
+
+      try {
+        if (mode === "duration") {
+          const total = Math.round(miniPlayerInstance.getDuration() || 0);
+          if (total <= 0) {
+            showToast("Aguarde o vídeo carregar para capturar a duração.", "info");
+            return;
+          }
+          pushUndo();
+          track.minutes = String(Math.floor(total / 60));
+          track.seconds = String(total % 60);
+          saveState();
+          renderTracks();
+          showToast(`Duração (${track.minutes}:${String(track.seconds).padStart(2, "0")}) salva!`, "success");
+        } else if (mode === "cue") {
+          const current = Math.round(miniPlayerInstance.getCurrentTime() || 0);
+          pushUndo();
+          track.cue = secondsToMMSS(current);
+          track.showExtras = true;
+          saveState();
+          renderTracks();
+          showToast(`Cue (${track.cue}) marcado na faixa!`, "success");
+        }
+      } catch (e) {
+        showToast("Não foi possível ler o tempo do player.", "error");
+      }
+    }
+
+    /* =========================================================================
+       EXPORTAÇÃO DE ARQUIVO (.TXT, .MD, .CSV, .JSON)
        ========================================================================= */
     function openGenerateModal() {
       const modal = document.getElementById("generate-modal");
-      if (modal) {
-        modal.classList.remove("hidden");
-        modal.classList.add("flex");
-        refreshExportPreview();
-      }
+      if (!modal) return;
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+      refreshExportPreview();
     }
 
     function closeGenerateModal() {
       const modal = document.getElementById("generate-modal");
-      if (modal) {
-        modal.classList.add("hidden");
-        modal.classList.remove("flex");
-      }
+      if (!modal) return;
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
     }
 
     function setExportFormat(fmt) {
       exportFormat = fmt;
       document.querySelectorAll(".fmt-btn").forEach(btn => {
-        btn.className = "fmt-btn py-1.5 rounded-lg font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition cursor-pointer";
+        btn.classList.remove("bg-white", "dark:bg-slate-800", "text-emerald-600", "dark:text-emerald-400", "shadow-sm", "font-semibold");
+        btn.classList.add("text-slate-600", "dark:text-slate-400", "font-medium");
       });
-      const activeBtn = document.getElementById(`fmt-btn-${fmt}`);
-      if (activeBtn) {
-        activeBtn.className = "fmt-btn py-1.5 rounded-lg font-semibold bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm transition cursor-pointer";
+      const active = document.getElementById(`fmt-btn-${fmt}`);
+      if (active) {
+        active.classList.add("bg-white", "dark:bg-slate-800", "text-emerald-600", "dark:text-emerald-400", "shadow-sm", "font-semibold");
+        active.classList.remove("text-slate-600", "dark:text-slate-400", "font-medium");
       }
       refreshExportPreview();
     }
 
-    function generateExportContent() {
-      const includeExtras = Boolean(document.getElementById("export-include-extras")?.checked);
-      const includeHeader = Boolean(document.getElementById("export-include-header")?.checked);
+    function buildExportContent() {
+      const includeExtras = document.getElementById("export-include-extras")?.checked ?? true;
+      const includeHeader = document.getElementById("export-include-header")?.checked ?? true;
       const list = getFilteredAndSortedTracks();
-      const totalSecs = list.reduce((acc, t) => acc + getTrackDurationSeconds(t), 0);
+
+      let totalSecs = 0;
+      list.forEach(t => { totalSecs += getTrackDurationSeconds(t); });
 
       if (exportFormat === "json") {
-        const payload = list.map((t, idx) => {
+        const payload = list.map((t, i) => {
           const item = {
-            numero: idx + 1,
-            titulo: t.title || "",
+            numero: i + 1,
+            musica: t.title || "",
             tempo: formatTrackDuration(t),
+            minutos: t.minutes || "",
+            segundos: t.seconds || "",
             tipo: t.type || "",
             estilo: t.style || "",
             info: t.info || ""
           };
           if (includeExtras) {
-            item.favorita = Boolean(t.favorite);
             item.bpm = t.bpm || "";
             item.vibe = t.mood || "";
             item.trecho_cue = t.cue || "";
             item.energia = t.energy || "";
             item.licenca = t.license || "";
-            item.status = t.status || "";
             item.link = t.link || "";
+            item.status = t.status || "";
+            item.favorita = Boolean(t.favorite);
           }
           return item;
         });
-        return JSON.stringify(
-          includeHeader
-            ? {
-                total_faixas: list.length,
-                tempo_total: formatTotalSeconds(totalSecs),
-                faixas: payload
-              }
-            : payload,
-          null,
-          2
-        );
+        return JSON.stringify(payload, null, 2);
       }
 
       if (exportFormat === "csv") {
-        const baseHeaders = ["#", "Título", "Tempo", "Tipo", "Estilo", "+Info"];
-        const extraHeaders = includeExtras
-          ? ["Favorita", "BPM", "Vibe", "Trecho (Cue)", "Energia", "Licença", "Status", "Link"]
-          : [];
-        const headers = [...baseHeaders, ...extraHeaders];
-        const escapeCsv = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+        const headers = ["Numero", "Musica", "Tempo", "Tipo", "Estilo", "Info"];
+        if (includeExtras) {
+          headers.push("BPM", "Vibe", "Trecho_Cue", "Energia", "Licenca", "Link", "Status", "Favorita");
+        }
+        const escCsv = val => `"${String(val ?? "").replace(/"/g, '""')}"`;
+        const rows = [headers.map(escCsv).join(",")];
 
-        const rows = [headers.map(escapeCsv).join(",")];
-        list.forEach((t, idx) => {
-          const baseCols = [
-            idx + 1,
+        list.forEach((t, i) => {
+          const row = [
+            i + 1,
             t.title || "",
             formatTrackDuration(t),
             t.type || "",
             t.style || "",
             t.info || ""
           ];
-          const extraCols = includeExtras
-            ? [
-                t.favorite ? "Sim" : "",
-                t.bpm || "",
-                t.mood || "",
-                t.cue || "",
-                t.energy || "",
-                t.license || "",
-                t.status || "",
-                t.link || ""
-              ]
-            : [];
-          rows.push([...baseCols, ...extraCols].map(escapeCsv).join(","));
+          if (includeExtras) {
+            row.push(
+              t.bpm || "",
+              t.mood || "",
+              t.cue || "",
+              t.energy || "",
+              t.license || "",
+              t.link || "",
+              t.status || "",
+              t.favorite ? "Sim" : ""
+            );
+          }
+          rows.push(row.map(escCsv).join(","));
         });
         return rows.join("\n");
       }
 
       if (exportFormat === "md") {
-        const out = [];
+        const lines = [];
         if (includeHeader) {
-          out.push("# Lista de Músicas — TrackSheet Studio");
-          out.push(`- **Total de faixas:** ${list.length}`);
-          out.push(`- **Duração total:** ${formatTotalSeconds(totalSecs)}`);
-          out.push("");
+          lines.push(`# Lista de Músicas (${list.length} faixas — Tempo Total: ${formatTotalSeconds(totalSecs)})`);
+          lines.push("");
         }
-
-        list.forEach((t, idx) => {
-          const star = t.favorite ? "★ " : "";
-          out.push(`### ${idx + 1}. ${star}${t.title || "(Sem título)"}`);
-          out.push(`- **Tempo:** ${formatTrackDuration(t)}`);
-          out.push(`- **Tipo:** ${t.type || ""}`);
-          out.push(`- **Estilo:** ${t.style || ""}`);
-          out.push(`- **+Info:** ${t.info || ""}`);
+        list.forEach((t, i) => {
+          const star = t.favorite ? " ★" : "";
+          lines.push(`### ${i + 1}. ${t.title || "(Sem título)"}${star}`);
+          lines.push(`- **Tempo:** ${formatTrackDuration(t)}`);
+          lines.push(`- **Tipo:** ${t.type || ""}`);
+          lines.push(`- **Estilo:** ${t.style || ""}`);
+          lines.push(`- **+Info:** ${t.info || ""}`);
           if (includeExtras) {
-            out.push(`- **BPM:** ${t.bpm || ""}`);
-            out.push(`- **Vibe:** ${t.mood || ""}`);
-            out.push(`- **Trecho (Cue):** ${t.cue || ""}`);
-            out.push(`- **Energia:** ${t.energy || ""}`);
-            out.push(`- **Licença:** ${t.license || ""}`);
-            out.push(`- **Status:** ${t.status || ""}`);
-            out.push(`- **Link:** ${t.link || ""}`);
+            lines.push(`- **BPM:** ${t.bpm || ""}`);
+            lines.push(`- **Vibe:** ${t.mood || ""}`);
+            lines.push(`- **Trecho (Cue):** ${t.cue || ""}`);
+            lines.push(`- **Energia:** ${t.energy || ""}`);
+            lines.push(`- **Licença:** ${t.license || ""}`);
+            lines.push(`- **Link:** ${t.link || ""}`);
+            lines.push(`- **Status:** ${t.status || ""}`);
           }
-          out.push("");
+          lines.push("");
         });
-        return out.join("\n").trim();
+        return lines.join("\n").trim();
       }
 
       // Formato padrão: .TXT
       const lines = [];
       if (includeHeader) {
-        lines.push("========================================");
-        lines.push("LISTA DE MÚSICAS — TRACKSHEET STUDIO");
-        lines.push(`Total de faixas: ${list.length} | Tempo total: ${formatTotalSeconds(totalSecs)}`);
-        lines.push("========================================");
+        lines.push(`LISTA DE MÚSICAS (${list.length} faixas | Tempo Total: ${formatTotalSeconds(totalSecs)})`);
+        lines.push("=".repeat(56));
         lines.push("");
       }
 
-      list.forEach((t, idx) => {
-        const star = t.favorite ? "★ " : "";
-        lines.push(`${idx + 1}. ${star}${t.title || ""}`);
+      list.forEach((t, i) => {
+        const star = t.favorite ? " [★]" : "";
+        lines.push(`${i + 1}. ${t.title || ""}${star}`);
         lines.push(`   Tempo: ${formatTrackDuration(t)}`);
         lines.push(`   Tipo: ${t.type || ""}`);
         lines.push(`   Estilo: ${t.style || ""}`);
@@ -3090,8 +2766,8 @@
           lines.push(`   Trecho (Cue): ${t.cue || ""}`);
           lines.push(`   Energia: ${t.energy || ""}`);
           lines.push(`   Licença: ${t.license || ""}`);
-          lines.push(`   Status: ${t.status || ""}`);
           lines.push(`   Link: ${t.link || ""}`);
+          lines.push(`   Status: ${t.status || ""}`);
         }
         lines.push("");
       });
@@ -3100,24 +2776,26 @@
     }
 
     function refreshExportPreview() {
-      const ta = document.getElementById("export-preview-textarea");
+      const textarea = document.getElementById("export-preview-textarea");
       const countEl = document.getElementById("export-char-count");
-      const content = generateExportContent();
-      if (ta) ta.value = content;
+      if (!textarea) return;
+      const content = buildExportContent();
+      textarea.value = content;
       if (countEl) countEl.textContent = `${content.length} caracteres`;
     }
 
     function copyExportText() {
-      const content = generateExportContent();
-      copyTextToClipboard(content);
-      showToast("Conteúdo copiado para a área de transferência!", "success");
+      const content = buildExportContent();
+      navigator.clipboard.writeText(content).then(() => {
+        showToast("Texto copiado para a área de transferência!", "success");
+      });
     }
 
     function downloadGeneratedFile() {
-      const content = generateExportContent();
-      const rawName = document.getElementById("export-filename")?.value.trim() || "lista-musicas";
-      const safeName = rawName.replace(/[^a-zA-Z0-9_-]/g, "_");
-      const filename = `${safeName}.${exportFormat}`;
+      const content = buildExportContent();
+      const rawName = (document.getElementById("export-filename")?.value || "lista-musicas").trim();
+      const safeName = rawName.replace(/[^a-zA-Z0-9_-]/g, "_") || "lista-musicas";
+      const fileName = `${safeName}.${exportFormat}`;
 
       const mimeMap = {
         txt: "text/plain;charset=utf-8",
@@ -3130,17 +2808,325 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = filename;
+      a.download = fileName;
       document.body.appendChild(a);
       a.click();
-      a.remove();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      showToast(`Arquivo "${filename}" baixado!`, "success");
+      showToast(`Arquivo "${fileName}" baixado!`, "success");
     }
 
     /* =========================================================================
-       ASSISTENTE GEMINI AI
+       IMPORTAÇÃO DE TEXTO OU ARQUIVO (.TXT, .MD, .CSV, .JSON)
        ========================================================================= */
+    function openPasteTextModal() {
+      const modal = document.getElementById("paste-text-modal");
+      if (modal) {
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+        updatePastePreviewStats();
+      }
+    }
+
+    function closePasteTextModal() {
+      const modal = document.getElementById("paste-text-modal");
+      if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      }
+    }
+
+    function loadFileIntoPasteModal(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const textarea = document.getElementById("paste-import-textarea");
+        if (textarea) {
+          textarea.value = String(e.target?.result || "");
+          updatePastePreviewStats();
+        }
+      };
+      reader.readAsText(file, "UTF-8");
+      event.target.value = "";
+    }
+
+    function importAnyTrackFile(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const text = String(e.target?.result || "");
+        const parsed = parseImportedTracksText(text);
+        if (parsed.length === 0) {
+          showToast("Nenhuma faixa identificada no arquivo.", "error");
+          return;
+        }
+        applyImportedTracks(parsed, "fill-empty");
+      };
+      reader.readAsText(file, "UTF-8");
+      event.target.value = "";
+    }
+
+    function parseDurationString(str) {
+      const match = String(str || "").trim().match(/^(\d+):(\d{1,2})$/);
+      if (!match) return { minutes: "", seconds: "" };
+      return {
+        minutes: String(parseInt(match[1], 10)),
+        seconds: String(parseInt(match[2], 10))
+      };
+    }
+
+    function parseImportedTracksText(rawText) {
+      const text = String(rawText || "").trim();
+      if (!text) return [];
+
+      // 1. Tenta JSON
+      if (text.startsWith("[") || text.startsWith("{")) {
+        try {
+          const json = JSON.parse(text);
+          const arr = Array.isArray(json) ? json : Array.isArray(json.tracks) ? json.tracks : [];
+          if (arr.length > 0) {
+            return arr.map(item => {
+              const dur = parseDurationString(item.tempo || item.duration || "");
+              return {
+                title: item.musica || item.title || "",
+                minutes: item.minutos !== undefined && item.minutos !== "" ? String(item.minutos) : dur.minutes,
+                seconds: item.segundos !== undefined && item.segundos !== "" ? String(item.segundos) : dur.seconds,
+                type: item.tipo || item.type || "",
+                style: item.estilo || item.style || "",
+                info: item.info || "",
+                bpm: item.bpm ? String(item.bpm) : "",
+                mood: item.vibe || item.mood || "",
+                cue: item.trecho_cue || item.cue || "",
+                energy: item.energia || item.energy ? String(item.energia || item.energy) : "",
+                license: item.licenca || item.license || "",
+                link: item.link || "",
+                status: item.status || "",
+                favorite: Boolean(item.favorita || item.favorite)
+              };
+            }).filter(x => x.title);
+          }
+        } catch (e) {
+          // Segue para CSV / TXT / MD
+        }
+      }
+
+      // 2. Tenta CSV
+      const firstLine = text.split(/\r?\n/)[0] || "";
+      if (firstLine.includes(",") && /musica|title/i.test(firstLine)) {
+        const lines = text.split(/\r?\n/).filter(Boolean);
+        const parseCsvRow = line => {
+          const cols = [];
+          let cur = "";
+          let inQuotes = false;
+          for (let i = 0; i < line.length; i++) {
+            const ch = line[i];
+            if (ch === '"' && line[i + 1] === '"') {
+              cur += '"';
+              i++;
+            } else if (ch === '"') {
+              inQuotes = !inQuotes;
+            } else if (ch === "," && !inQuotes) {
+              cols.push(cur);
+              cur = "";
+            } else {
+              cur += ch;
+            }
+          }
+          cols.push(cur);
+          return cols.map(c => c.trim());
+        };
+
+        const headers = parseCsvRow(lines[0]).map(h => h.toLowerCase());
+        const idx = name => headers.findIndex(h => h.includes(name));
+        const iTitle = idx("musica") >= 0 ? idx("musica") : idx("title");
+        const iTempo = idx("tempo");
+        const iTipo = idx("tipo");
+        const iEstilo = idx("estilo");
+        const iInfo = idx("info");
+        const iBpm = idx("bpm");
+        const iVibe = idx("vibe");
+        const iCue = idx("cue");
+        const iEnergia = idx("energia");
+        const iLic = idx("licen");
+        const iLink = idx("link");
+        const iStatus = idx("status");
+        const iFav = idx("fav");
+
+        if (iTitle >= 0) {
+          return lines.slice(1).map(line => {
+            const c = parseCsvRow(line);
+            const dur = iTempo >= 0 ? parseDurationString(c[iTempo]) : { minutes: "", seconds: "" };
+            return {
+              title: c[iTitle] || "",
+              minutes: dur.minutes,
+              seconds: dur.seconds,
+              type: iTipo >= 0 ? c[iTipo] || "" : "",
+              style: iEstilo >= 0 ? c[iEstilo] || "" : "",
+              info: iInfo >= 0 ? c[iInfo] || "" : "",
+              bpm: iBpm >= 0 ? c[iBpm] || "" : "",
+              mood: iVibe >= 0 ? c[iVibe] || "" : "",
+              cue: iCue >= 0 ? c[iCue] || "" : "",
+              energy: iEnergia >= 0 ? c[iEnergia] || "" : "",
+              license: iLic >= 0 ? c[iLic] || "" : "",
+              link: iLink >= 0 ? c[iLink] || "" : "",
+              status: iStatus >= 0 ? c[iStatus] || "" : "",
+              favorite: iFav >= 0 ? /sim|true|1/i.test(c[iFav] || "") : false
+            };
+          }).filter(x => x.title);
+        }
+      }
+
+      // 3. Parse TXT / Markdown estruturado
+      const lines = text.split(/\r?\n/);
+      const parsedItems = [];
+      let current = null;
+
+      for (const rawLine of lines) {
+        const line = rawLine.trim();
+        if (!line || line.startsWith("===") || line.startsWith("# Lista de Músicas") || line.startsWith("LISTA DE MÚSICAS")) {
+          continue;
+        }
+
+        const headerMatch = line.match(/^(?:###\s*)?\d+\.\s+(.+)$/);
+        if (headerMatch) {
+          if (current && current.title) parsedItems.push(current);
+          let titleClean = headerMatch[1].trim();
+          let fav = false;
+          if (titleClean.endsWith("[★]") || titleClean.endsWith("★")) {
+            fav = true;
+            titleClean = titleClean.replace(/\[?★\]?$/, "").trim();
+          }
+          current = {
+            title: titleClean,
+            minutes: "",
+            seconds: "",
+            type: "",
+            style: "",
+            info: "",
+            bpm: "",
+            mood: "",
+            cue: "",
+            energy: "",
+            license: "",
+            link: "",
+            status: "",
+            favorite: fav
+          };
+          continue;
+        }
+
+        if (!current) continue;
+
+        const kvMatch = line.replace(/^-\s*/, "").replace(/\*\*/g, "").match(/^([^:]+):\s*(.*)$/);
+        if (kvMatch) {
+          const key = kvMatch[1].trim().toLowerCase();
+          const val = kvMatch[2].trim();
+          if (key === "tempo") {
+            const dur = parseDurationString(val);
+            current.minutes = dur.minutes;
+            current.seconds = dur.seconds;
+          } else if (key === "tipo") {
+            current.type = val;
+          } else if (key === "estilo") {
+            current.style = val;
+          } else if (key === "+info" || key === "info") {
+            current.info = val;
+          } else if (key === "bpm") {
+            current.bpm = val;
+          } else if (key === "vibe" || key === "mood") {
+            current.mood = val;
+          } else if (key.includes("trecho") || key === "cue") {
+            current.cue = val;
+          } else if (key === "energia") {
+            current.energy = val;
+          } else if (key.startsWith("licen")) {
+            current.license = val;
+          } else if (key === "link") {
+            current.link = val;
+          } else if (key === "status") {
+            current.status = val;
+          }
+        }
+      }
+
+      if (current && current.title) parsedItems.push(current);
+      return parsedItems;
+    }
+
+    function updatePastePreviewStats() {
+      const textarea = document.getElementById("paste-import-textarea");
+      const badge = document.getElementById("paste-detected-badge");
+      if (!textarea || !badge) return;
+      const items = parseImportedTracksText(textarea.value);
+      if (items.length === 0) {
+        badge.textContent = "Aguardando texto válido...";
+      } else {
+        badge.textContent = `${items.length} música(s) identificada(s)`;
+      }
+    }
+
+    function applyImportedTracks(parsedItems, mode = "fill-empty") {
+      pushUndo();
+      let updatedCount = 0;
+      let addedCount = 0;
+
+      parsedItems.forEach(item => {
+        const normItem = normalizeForMatch(item.title);
+        const existing = tracks.find(t => normalizeForMatch(t.title) === normItem);
+
+        if (existing) {
+          const fields = ["minutes", "seconds", "type", "style", "info", "bpm", "mood", "cue", "energy", "license", "link", "status"];
+          let changed = false;
+          fields.forEach(f => {
+            if (!item[f]) return;
+            if (mode === "overwrite" || !String(existing[f] || "").trim()) {
+              existing[f] = item[f];
+              changed = true;
+            }
+          });
+          if (item.favorite && !existing.favorite) {
+            existing.favorite = true;
+            changed = true;
+          }
+          if (changed) updatedCount++;
+        } else {
+          const maxOrder = tracks.reduce((max, t) => Math.max(max, t.order), -1);
+          tracks.push({
+            ...createEmptyTrack(item.title, maxOrder + 1),
+            ...item
+          });
+          addedCount++;
+        }
+      });
+
+      saveState();
+      renderTracks();
+      showToast(`Importado: ${updatedCount} atualizada(s), ${addedCount} adicionada(s).`, "success");
+    }
+
+    function confirmPasteTextImport() {
+      const textarea = document.getElementById("paste-import-textarea");
+      if (!textarea) return;
+      const parsed = parseImportedTracksText(textarea.value);
+      if (parsed.length === 0) {
+        showToast("Nenhuma música reconhecida no texto colado.", "error");
+        return;
+      }
+      const mode = document.querySelector('input[name="paste-import-mode"]:checked')?.value || "fill-empty";
+      applyImportedTracks(parsed, mode);
+      textarea.value = "";
+      closePasteTextModal();
+    }
+
+    /* =========================================================================
+       INTEGRAÇÃO GEMINI AI (VIA GITHUB SECRETS)
+       ========================================================================= */
+    function isGeminiKeyConfigured() {
+      return Boolean(GEMINI_API_KEY && GEMINI_API_KEY.trim() !== "" && !GEMINI_API_KEY.includes("__GEMINI_API_KEY__"));
+    }
+
     function openAiHubModal() {
       const modal = document.getElementById("ai-hub-modal");
       if (modal) {
@@ -3159,145 +3145,115 @@
 
     function setAiProgress(visible, text = "") {
       const bar = document.getElementById("ai-progress-bar");
-      const label = document.getElementById("ai-progress-text");
-      if (bar) bar.classList.toggle("hidden", !visible);
-      if (label && text) label.textContent = text;
+      const textEl = document.getElementById("ai-progress-text");
+      if (!bar) return;
+      bar.classList.toggle("hidden", !visible);
+      if (textEl && text) textEl.textContent = text;
     }
 
-    async function callGeminiApiForTracks(targetTracks) {
-      if (!GEMINI_API_KEY || !GEMINI_API_KEY.trim()) {
-        // Fallback inteligente local quando GEMINI_API_KEY está em branco
-        return targetTracks.map(t => {
-          const inferred = inferMetadataFromTitle(t.title);
-          return {
-            id: t.id,
-            title: t.title,
-            suggestions: {
-              minutes: t.minutes || "",
-              seconds: t.seconds || "",
-              type: inferred.type || "Vocal",
-              style: inferred.style || "Pop / R&B",
-              bpm: t.bpm || "",
-              mood: inferred.mood || "Relaxante / Chill",
-              energy: t.energy || "3",
-              license: inferred.license || "Copyright / Comercial",
-              info: t.info || "Sugestão local (preencha GEMINI_API_KEY no código para análise completa com IA)"
-            },
-            notes: "Configure GEMINI_API_KEY no topo do <script> para obter BPM real, duração exata e revisão profunda com Gemini."
-          };
-        });
+    async function callGeminiApi(targetTracks) {
+      if (!isGeminiKeyConfigured()) {
+        throw new Error("MISSING_SECRET");
       }
 
-      const promptPayload = targetTracks.map(t => ({
+      const payloadTracks = targetTracks.map(t => ({
         id: t.id,
         title: t.title,
-        current: {
-          minutes: t.minutes,
-          seconds: t.seconds,
-          type: t.type,
-          style: t.style,
-          bpm: t.bpm,
-          mood: t.mood,
-          energy: t.energy,
-          license: t.license,
-          info: t.info
-        }
+        minutes: t.minutes,
+        seconds: t.seconds,
+        type: t.type,
+        style: t.style,
+        info: t.info,
+        bpm: t.bpm,
+        mood: t.mood,
+        cue: t.cue,
+        energy: t.energy,
+        license: t.license,
+        link: t.link
       }));
 
-      const systemPrompt = `Você é um especialista em catalogação musical e direitos autorais.
-Analise cada faixa enviada no JSON e retorne EXCLUSIVAMENTE um JSON válido no formato:
-{
-  "results": [
-    {
-      "id": "id_da_faixa",
-      "suggestions": {
-        "minutes": "3",
-        "seconds": "45",
-        "type": "Vocal | Instrumental | Trilha Sonora (OST) | Lo-Fi / Beat | Remix / Edit",
-        "style": "Gênero musical preciso",
-        "bpm": "110",
-        "mood": "Melancólico | Nostálgico | Relaxante / Chill | Energético | Épico / Cinematográfico | Sombrio / Tenso | Alegre / Leve",
-        "energy": "1 a 5",
-        "license": "Copyright / Comercial | Creative Commons / Livre | Domínio Público",
-        "info": "Breve informação útil sobre artista, álbum, jogo ou uso"
-      },
-      "notes": "Indique se algum campo já preenchido merece correção ou deixe vazio se estiver ótimo"
-    }
-  ]
-}`;
+      const prompt = `Você é um especialista em catalogação musical e direitos autorais.
+Analise a lista de faixas abaixo e retorne um JSON válido (array de objetos), um para cada faixa com o mesmo "id".
+Para cada faixa, preencha com precisão:
+- "id": string (mesmo id enviado)
+- "minutes": string (minutos da versão oficial da música, apenas número, se souber)
+- "seconds": string (segundos 0-59 da versão oficial, apenas número, se souber)
+- "type": string ("Vocal", "Instrumental", "Trilha Sonora (OST)", "Lo-Fi / Beat", "Remix / Edit" ou "Acapella")
+- "style": string (gênero musical principal em português, ex: "Soul / Jazz", "Game OST", "Synthwave / Retrowave", "Hip-Hop / Rap")
+- "bpm": string (BPM aproximado em número inteiro, ex: "105")
+- "mood": string (clima/vibe em português, ex: "Melancólico", "Relaxante / Chill", "Energético", "Nostálgico")
+- "energy": string ("1", "2", "3", "4" ou "5")
+- "license": string (status real de direitos autorais: "Copyright (Gravadora)", "Creative Commons / CC", "Royalty-Free / OST" ou "Domínio Público")
+- "info": string (nota curta e útil em português: artista, álbum/jogo e ano de lançamento)
+- "reason": string (breve justificativa em português se algum campo já preenchido pelo usuário parecer incorreto e você sugerir alteração; caso contrário, string vazia "")
 
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(GEMINI_API_KEY.trim())}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [
-              {
-                role: "user",
-                parts: [{ text: `${systemPrompt}\n\nFaixas:\n${JSON.stringify(promptPayload)}` }]
-              }
-            ],
-            generationConfig: {
-              responseMimeType: "application/json"
-            }
-          })
-        }
-      );
+Faixas para analisar:
+${JSON.stringify(payloadTracks)}`;
 
-      if (!response.ok) {
-        throw new Error(`Erro HTTP ${response.status} na API Gemini`);
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            responseMimeType: "application/json",
+            temperature: 0.2
+          }
+        })
+      });
+
+      if (!res.ok) {
+        const errBody = await res.text();
+        throw new Error(`Erro na API Gemini (${res.status}): ${errBody}`);
       }
 
-      const data = await response.json();
-      const rawJson = data?.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-      const parsed = JSON.parse(rawJson);
-      return Array.isArray(parsed.results) ? parsed.results : [];
+      const data = await res.json();
+      const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
+      const parsed = JSON.parse(rawText);
+      return Array.isArray(parsed) ? parsed : [];
     }
 
     async function analyzeAllTracksWithGemini() {
       if (tracks.length === 0) {
-        showToast("Adicione faixas antes de analisar com a IA.", "warning");
+        showToast("Adicione pelo menos uma música na lista primeiro.", "info");
         return;
       }
 
-      const onlyIncomplete = Boolean(document.getElementById("ai-only-incomplete-chk")?.checked);
-      const targets = onlyIncomplete ? tracks.filter(t => isTrackMetadataEmpty(t) || !t.type || !t.style) : tracks;
+      const onlyIncomplete = document.getElementById("ai-only-incomplete-chk")?.checked ?? false;
+      const autoFillEmpty = document.getElementById("ai-auto-fill-empty-chk")?.checked ?? true;
 
-      if (targets.length === 0) {
-        showToast("Todas as faixas já possuem os campos principais preenchidos.", "info");
+      const candidates = tracks.filter(t => {
+        if (!t.title.trim()) return false;
+        if (!onlyIncomplete) return true;
+        return !t.minutes || !t.type || !t.style || !t.bpm || !t.mood || !t.license || !t.info;
+      });
+
+      if (candidates.length === 0) {
+        showToast("Nenhuma faixa pendente para analisar.", "info");
         return;
       }
 
       const btn = document.getElementById("ai-run-all-btn");
       if (btn) btn.disabled = true;
-      setAiProgress(true, `Analisando ${targets.length} faixa(s)...`);
+      setAiProgress(true, `Analisando ${candidates.length} faixa(s) com Gemini AI...`);
 
       try {
-        const results = await callGeminiApiForTracks(targets);
-        const autoFillEmpty = Boolean(document.getElementById("ai-auto-fill-empty-chk")?.checked);
-
-        if (autoFillEmpty && results.length > 0) {
-          pushUndo();
-        }
-
-        results.forEach(res => {
-          aiStoredResults[res.id] = res;
-          if (autoFillEmpty) {
-            const track = tracks.find(t => t.id === res.id);
-            if (track && res.suggestions) {
-              applySuggestionObjectToTrack(track, res.suggestions, false);
-            }
-          }
+        const results = await callGeminiApi(candidates);
+        aiStoredResults = {};
+        results.forEach(item => {
+          if (item && item.id) aiStoredResults[item.id] = item;
         });
 
-        saveState();
-        renderTracks();
+        if (autoFillEmpty) {
+          applyAllAiStoredSuggestions(false, true);
+        }
+
         renderAiResults();
-        showToast("Análise concluída!", "success");
+        showToast("Análise do Gemini AI concluída!", "success");
       } catch (err) {
-        console.error(err);
-        showToast("Erro ao consultar Gemini AI. Verifique sua API Key.", "error");
+        renderAiError(err);
       } finally {
         if (btn) btn.disabled = false;
         setAiProgress(false);
@@ -3306,202 +3262,204 @@ Analise cada faixa enviada no JSON e retorne EXCLUSIVAMENTE um JSON válido no f
 
     async function analyzeSingleTrackWithGemini(trackId) {
       const track = tracks.find(t => t.id === trackId);
-      if (!track) return;
+      if (!track || !track.title.trim()) {
+        showToast("Preencha o nome da música primeiro.", "info");
+        return;
+      }
+
       openAiHubModal();
-      setAiProgress(true, `Analisando "${track.title || "faixa"}"...`);
+      setAiProgress(true, `Analisando "${track.title}" com Gemini AI...`);
+
       try {
-        const results = await callGeminiApiForTracks([track]);
-        const autoFillEmpty = Boolean(document.getElementById("ai-auto-fill-empty-chk")?.checked);
-        if (results[0]) {
-          aiStoredResults[track.id] = results[0];
-          if (autoFillEmpty) {
-            pushUndo();
-            applySuggestionObjectToTrack(track, results[0].suggestions, false);
-            saveState();
-            renderTracks();
-          }
+        const results = await callGeminiApi([track]);
+        results.forEach(item => {
+          if (item && item.id) aiStoredResults[item.id] = item;
+        });
+
+        const autoFillEmpty = document.getElementById("ai-auto-fill-empty-chk")?.checked ?? true;
+        if (autoFillEmpty) {
+          applySingleAiSuggestion(trackId, false, true);
         }
+
         renderAiResults();
+        showToast(`Análise concluída para "${track.title}".`, "success");
       } catch (err) {
-        showToast("Falha ao analisar faixa com Gemini AI.", "error");
+        renderAiError(err);
       } finally {
         setAiProgress(false);
       }
     }
 
-    function applySuggestionObjectToTrack(track, sug, overwrite = false) {
-      if (!sug) return;
-      const fields = ["minutes", "seconds", "type", "style", "bpm", "mood", "energy", "license", "info"];
-      fields.forEach(f => {
-        const val = String(sug[f] ?? "").trim();
-        if (!val) return;
-        if (overwrite || !String(track[f] || "").trim()) {
-          track[f] = f === "seconds" ? val.padStart(2, "0") : val;
-        }
-      });
+    function renderAiError(err) {
+      const container = document.getElementById("ai-results-container");
+      if (!container) return;
+
+      if (err && err.message === "MISSING_SECRET") {
+        container.innerHTML = `
+          <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200 space-y-2">
+            <p class="font-bold text-sm">Chave GEMINI_API_KEY não injetada neste ambiente</p>
+            <p class="text-xs leading-relaxed">
+              Para proteger sua chave, ela não fica visível na interface nem no código-fonte público. Configure o Secret <code class="font-mono px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/10">GEMINI_API_KEY</code> nas configurações do seu repositório GitHub e publique via GitHub Actions para ativar a IA automaticamente.
+            </p>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <div class="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 space-y-1">
+            <p class="font-bold text-sm">Erro ao consultar o Gemini AI</p>
+            <p class="text-xs break-words">${escapeHtml(err?.message || "Erro desconhecido")}</p>
+          </div>
+        `;
+      }
     }
 
     function renderAiResults() {
       const container = document.getElementById("ai-results-container");
       const btnEmpty = document.getElementById("ai-apply-all-empty-btn");
-      const btnAll = document.getElementById("ai-apply-all-changes-btn");
-      const entries = Object.values(aiStoredResults);
-
+      const btnChanges = document.getElementById("ai-apply-all-changes-btn");
       if (!container) return;
 
-      if (entries.length === 0) {
-        if (btnEmpty) btnEmpty.classList.add("hidden");
-        if (btnAll) btnAll.classList.add("hidden");
-        return;
-      }
+      const entries = Object.values(aiStoredResults);
+      if (entries.length === 0) return;
 
       if (btnEmpty) btnEmpty.classList.remove("hidden");
-      if (btnAll) btnAll.classList.remove("hidden");
+      if (btnChanges) btnChanges.classList.remove("hidden");
 
       container.innerHTML = entries
-        .map(res => {
-          const track = tracks.find(t => t.id === res.id);
+        .map(sug => {
+          const track = tracks.find(t => t.id === sug.id);
           if (!track) return "";
-          const s = res.suggestions || {};
+
+          const fieldsMap = [
+            { key: "minutes", label: "Min" },
+            { key: "seconds", label: "Seg" },
+            { key: "type", label: "Tipo" },
+            { key: "style", label: "Estilo" },
+            { key: "bpm", label: "BPM" },
+            { key: "mood", label: "Vibe" },
+            { key: "energy", label: "Energia" },
+            { key: "license", label: "Licença" },
+            { key: "info", label: "+Info" }
+          ];
+
+          const badges = fieldsMap
+            .filter(f => sug[f.key])
+            .map(f => {
+              const curVal = String(track[f.key] || "").trim();
+              const newVal = String(sug[f.key] || "").trim();
+              const isDiff = curVal && curVal.toLowerCase() !== newVal.toLowerCase();
+              return `
+                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg border ${
+                  isDiff
+                    ? "bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-300"
+                    : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
+                }">
+                  <strong>${f.label}:</strong>
+                  ${isDiff ? `<span class="line-through opacity-60">${escapeHtml(curVal)}</span> → ` : ""}
+                  <span>${escapeHtml(newVal)}</span>
+                </span>
+              `;
+            })
+            .join("");
+
           return `
-            <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-2">
-              <div class="flex items-center justify-between gap-2">
-                <strong class="text-sm text-slate-900 dark:text-white">${escapeHtml(track.title || "(Sem título)")}</strong>
+            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2.5">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <h4 class="font-bold text-sm text-slate-900 dark:text-white">${escapeHtml(track.title)}</h4>
                 <div class="flex items-center gap-1.5">
                   <button
                     onclick="applySingleAiSuggestion('${track.id}', false)"
-                    class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold cursor-pointer"
-                  >
-                    Preencher Vazios
-                  </button>
+                    class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer"
+                  >Preencher Vazios</button>
                   <button
                     onclick="applySingleAiSuggestion('${track.id}', true)"
-                    class="px-2.5 py-1 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-semibold cursor-pointer"
-                  >
-                    Sobrescrever Tudo
-                  </button>
+                    class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-violet-600 hover:bg-violet-500 text-white cursor-pointer"
+                  >Aceitar Tudo</button>
                 </div>
               </div>
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-slate-600 dark:text-slate-300">
-                <div><span class="text-slate-400">Tempo:</span> ${escapeHtml(s.minutes || "-")}:${escapeHtml(s.seconds || "-")}</div>
-                <div><span class="text-slate-400">Tipo:</span> ${escapeHtml(s.type || "-")}</div>
-                <div><span class="text-slate-400">Estilo:</span> ${escapeHtml(s.style || "-")}</div>
-                <div><span class="text-slate-400">BPM:</span> ${escapeHtml(s.bpm || "-")}</div>
-                <div><span class="text-slate-400">Vibe:</span> ${escapeHtml(s.mood || "-")}</div>
-                <div><span class="text-slate-400">Energia:</span> ${escapeHtml(s.energy || "-")}</div>
-                <div class="col-span-2"><span class="text-slate-400">Licença:</span> ${escapeHtml(s.license || "-")}</div>
-              </div>
-              ${s.info ? `<p class="text-[11px] text-slate-500 dark:text-slate-400"><strong>+Info:</strong> ${escapeHtml(s.info)}</p>` : ""}
-              ${res.notes ? `<p class="text-[11px] text-amber-600 dark:text-amber-400"><strong>Observação AI:</strong> ${escapeHtml(res.notes)}</p>` : ""}
+              <div class="flex flex-wrap gap-1.5 text-[11px]">${badges}</div>
+              ${
+                sug.reason
+                  ? `<p class="text-[11px] text-amber-600 dark:text-amber-400">💡 ${escapeHtml(sug.reason)}</p>`
+                  : ""
+              }
             </div>
           `;
         })
         .join("");
     }
 
-    function applySingleAiSuggestion(trackId, overwrite) {
+    function applySingleAiSuggestion(trackId, overwriteExisting = false, silent = false) {
+      const sug = aiStoredResults[trackId];
       const track = tracks.find(t => t.id === trackId);
-      const res = aiStoredResults[trackId];
-      if (!track || !res) return;
-      pushUndo();
-      applySuggestionObjectToTrack(track, res.suggestions, overwrite);
+      if (!sug || !track) return;
+
+      if (!silent) pushUndo();
+      const fields = ["minutes", "seconds", "type", "style", "bpm", "mood", "energy", "license", "info"];
+      let count = 0;
+
+      fields.forEach(f => {
+        const val = String(sug[f] || "").trim();
+        if (!val) return;
+        if (overwriteExisting || !String(track[f] || "").trim()) {
+          track[f] = val;
+          count++;
+        }
+      });
+
       saveState();
       renderTracks();
-      showToast("Sugestões aplicadas à faixa!", "success");
+      renderAiResults();
+      if (!silent) {
+        showToast(`${count} campo(s) aplicado(s) em "${track.title}".`, "success");
+      }
     }
 
-    function applyAllAiStoredSuggestions(overwrite) {
-      const entries = Object.values(aiStoredResults);
-      if (entries.length === 0) return;
-      pushUndo();
-      entries.forEach(res => {
-        const track = tracks.find(t => t.id === res.id);
-        if (track) applySuggestionObjectToTrack(track, res.suggestions, overwrite);
-      });
-      saveState();
-      renderTracks();
-      showToast("Sugestões aplicadas a todas as faixas analisadas!", "success");
+    function applyAllAiStoredSuggestions(overwriteExisting = false, silent = false) {
+      const ids = Object.keys(aiStoredResults);
+      if (ids.length === 0) return;
+      if (!silent) pushUndo();
+      ids.forEach(id => applySingleAiSuggestion(id, overwriteExisting, true));
+      if (!silent) {
+        showToast("Sugestões do Gemini AI aplicadas na lista!", "success");
+      }
     }
 
     /* =========================================================================
-       AJUDA, CLIPBOARD E NOTIFICAÇÕES (TOAST)
+       NOTIFICAÇÕES (TOAST) E ATALHOS DE TECLADO
        ========================================================================= */
-    function openHelpModal() {
-      const modal = document.getElementById("help-modal");
-      if (modal) {
-        modal.classList.remove("hidden");
-        modal.classList.add("flex");
-      }
-    }
-
-    function closeHelpModal() {
-      const modal = document.getElementById("help-modal");
-      if (modal) {
-        modal.classList.add("hidden");
-        modal.classList.remove("flex");
-      }
-    }
-
-    function copyTextToClipboard(text) {
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.style.position = "fixed";
-      ta.style.left = "-9999px";
-      document.body.appendChild(ta);
-      ta.select();
-      try {
-        document.execCommand("copy");
-      } catch (e) {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(text).catch(() => {});
-        }
-      }
-      ta.remove();
-    }
-
     function showToast(message, type = "info") {
       const container = document.getElementById("toast-container");
       if (!container) return;
 
-      const colorMap = {
+      const colors = {
         success: "bg-emerald-600 text-white border-emerald-500",
         error: "bg-rose-600 text-white border-rose-500",
-        warning: "bg-amber-600 text-white border-amber-500",
         info: "bg-slate-900 dark:bg-slate-800 text-white border-slate-700"
       };
 
       const toast = document.createElement("div");
-      toast.className = `pointer-events-auto px-4 py-3 rounded-xl border shadow-xl text-xs font-medium flex items-center justify-between gap-3 transition-all duration-200 ${
-        colorMap[type] || colorMap.info
-      }`;
-      toast.innerHTML = `
-        <span>${escapeHtml(message)}</span>
-        <button type="button" onclick="this.parentElement.remove()" class="opacity-75 hover:opacity-100 font-bold cursor-pointer">✕</button>
-      `;
-
+      toast.className = `pointer-events-auto px-4 py-3 rounded-xl border shadow-xl text-xs font-medium flex items-center justify-between gap-3 transition-all duration-200 ${colors[type] || colors.info}`;
+      toast.innerHTML = `<span>${escapeHtml(message)}</span>`;
       container.appendChild(toast);
+
       setTimeout(() => {
         toast.style.opacity = "0";
+        toast.style.transform = "translateY(8px)";
         setTimeout(() => toast.remove(), 220);
-      }, 3400);
+      }, 3200);
     }
 
-    /* =========================================================================
-       ATALHOS DE TECLADO E INICIALIZAÇÃO
-       ========================================================================= */
     document.addEventListener("keydown", e => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
-        const activeTag = document.activeElement?.tagName;
-        if (activeTag !== "INPUT" && activeTag !== "TEXTAREA") {
-          e.preventDefault();
-          undoLastAction();
-        }
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault();
+        addNewTrack();
       } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
         openGenerateModal();
-      } else if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName)) {
         e.preventDefault();
-        addNewTrack();
+        undoLastAction();
       } else if (e.key === "Escape") {
         closeGenerateModal();
         closePasteTextModal();
@@ -3512,11 +3470,12 @@ Analise cada faixa enviada no JSON e retorne EXCLUSIVAMENTE um JSON válido no f
       }
     });
 
-    window.addEventListener("DOMContentLoaded", () => {
-      loadState();
-      renderTracks();
-      updateUndoButtons();
-    });
+    /* =========================================================================
+       INICIALIZAÇÃO
+       ========================================================================= */
+    loadState();
+    renderTracks();
+    updateUndoButtons();
   </script>
 </body>
 </html>
