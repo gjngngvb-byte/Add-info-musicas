@@ -11,21 +11,27 @@ permissions:
   id-token: write
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
       - env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           mkdir -p _site
           node -e 'const fs = require("fs"); const html = fs.readFileSync("index.html", "utf8").replace("__GEMINI_API_KEY__", process.env.GEMINI_API_KEY || ""); fs.writeFileSync("_site/index.html", html);'
-      - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
           path: "_site"
+
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: sleep 3
       - id: deployment
         uses: actions/deploy-pages@v4
