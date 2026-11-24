@@ -1,5 +1,6 @@
 const ALLOWED_ORIGINS = new Set([
   "https://gjngngvb-byte.github.io",
+  "https://tracksheet-studio.vercel.app",
   "https://tracksheet-studio-ciels-projects-9299fbb3.vercel.app",
   "https://tracksheet-studio-git-main-ciels-projects-9299fbb3.vercel.app"
 ]);
