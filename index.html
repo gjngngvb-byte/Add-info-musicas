@@ -2426,32 +2426,44 @@
         status = "created";
       }
 
-      // Completa automaticamente todos os campos vazios via Gemini AI ao adicionar por link
+      // Completa automaticamente apenas os campos vazios via Gemini AI ao adicionar por link;
+      // se a música já existia na lista e houver sugestões diferentes para campos já preenchidos, pergunta ao usuário.
       if (targetTrack && isGeminiKeyConfigured()) {
         try {
           if (!silentToast) {
-            setYoutubeStatus(true, `Preenchendo todos os campos com Gemini AI para "${targetTrack.title}"...`);
+            setYoutubeStatus(true, `Consultando Gemini AI para "${targetTrack.title}"...`);
           }
           const aiResults = await callGeminiApi([targetTrack]);
           const sug = aiResults.find(item => item && item.id === targetTrack.id) || aiResults[0];
           if (sug) {
             aiStoredResults[targetTrack.id] = { ...sug, id: targetTrack.id };
             const aiFields = ["minutes", "seconds", "type", "style", "bpm", "mood", "energy", "license", "info"];
+            let hasConflictsOnExisting = false;
+
             aiFields.forEach(f => {
               const val = String(sug[f] || "").trim();
-              if (val && !String(targetTrack[f] || "").trim()) {
+              if (!val) return;
+              const curVal = String(targetTrack[f] || "").trim();
+              if (!curVal) {
                 targetTrack[f] = val;
+              } else if (status === "matched" && curVal.toLowerCase() !== val.toLowerCase()) {
+                hasConflictsOnExisting = true;
               }
             });
+
+            if (status === "matched" && hasConflictsOnExisting && !silentToast) {
+              openAiHubModal();
+              renderAiResults();
+            }
           }
         } catch (err) {
-          console.warn("Falha ao preencher automaticamente via Gemini AI:", err);
+          console.warn("Falha ao consultar Gemini AI:", err);
         }
       }
 
       if (!silentToast) {
         if (status === "matched") {
-          showToast(`Atualizada e preenchida com AI: "${targetTrack.title}"`, "success");
+          showToast(`Música já estava na lista: campos vazios preenchidos (confira sugestões de alteração no Gemini AI).`, "info");
         } else {
           showToast(`Adicionada e preenchida com AI: "${targetTrack.title}"`, "success");
         }
