@@ -2197,13 +2197,61 @@ Responda somente JSON válido no formato {"minutes": 3, "seconds": 45}. Se não 
       }
     }
 
+    const YOUTUBE_DURATION_API = "https://tracksheet-studio-ciels-projects-9299fbb3.vercel.app/api/youtube-duration";
+    const youtubeMetadataCache = new Map();
+
+    async function fetchYoutubeMetadataBatch(videoIds) {
+      const uniqueIds = [...new Set(videoIds.filter(Boolean))];
+      const missingIds = uniqueIds.filter(id => !youtubeMetadataCache.has(id));
+      if (!missingIds.length) return;
+      for (let i = 0; i < missingIds.length; i += 50) {
+        const chunk = missingIds.slice(i, i + 50);
+        try {
+          const response = await fetchWithTimeout(YOUTUBE_DURATION_API, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ videoIds: chunk })
+          }, 12000);
+          const data = await response.json();
+          if (!response.ok) {
+            const error = new Error(data?.error || "Falha ao consultar a duração no YouTube.");
+            error.code = data?.code || "";
+            throw error;
+          }
+          Object.entries(data.videos || {}).forEach(([id, metadata]) => {
+            youtubeMetadataCache.set(id, metadata);
+          });
+        } catch (error) {
+          console.warn("YouTube Data API indisponível; usando métodos alternativos:", error);
+          // Cacheia falha como duração zero para não repetir chamadas em sequência.
+          chunk.forEach(id => {
+            if (!youtubeMetadataCache.has(id)) youtubeMetadataCache.set(id, { durationSeconds: 0 });
+          });
+          if (error?.code === "MISSING_YOUTUBE_API_KEY") {
+            showToast("Configure YOUTUBE_API_KEY no Vercel para ativar a busca oficial de duração.", "info");
+          }
+        }
+      }
+    }
+
     async function fetchYoutubeMetadata(videoId) {
       const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
       let title = "";
       let author = "";
       let durationSeconds = 0;
 
-      // 1. oEmbed oficial + Sonda do Player oficial do link
+      // A YouTube Data API fornece a duração exata do vídeo, sem usar Gemini.
+      if (!youtubeMetadataCache.has(videoId)) {
+        await fetchYoutubeMetadataBatch([videoId]);
+      }
+      const officialMetadata = youtubeMetadataCache.get(videoId);
+      if (officialMetadata) {
+        durationSeconds = Number(officialMetadata.durationSeconds) || 0;
+        title = officialMetadata.title || "";
+        author = officialMetadata.author || "";
+      }
+
+      // Complementa título/canal e usa player/NoEmbed apenas como fallback.
       const [oembedResult, iframeDuration] = await Promise.all([
         (async () => {
           try {
@@ -2536,7 +2584,9 @@ Responda somente JSON válido no formato {"minutes": 3, "seconds": 45}. Se não 
       try {
         // Primeiro coleta os metadados do YouTube sem chamar o Gemini por faixa.
         // Depois envia todas as faixas juntas em uma única solicitação Gemini.
-        setYoutubeStatus(true, `Coletando dados de ${validUrls.length} vídeo(s) do YouTube...`);
+        setYoutubeStatus(true, `Consultando duração oficial de ${validUrls.length} vídeo(s)...`);
+        const videoIds = validUrls.map(url => extractYoutubeVideoId(url)).filter(Boolean);
+        await fetchYoutubeMetadataBatch(videoIds);
         const results = [];
         for (let i = 0; i < validUrls.length; i++) {
           setYoutubeStatus(true, `Coletando vídeo ${i + 1} de ${validUrls.length}...`);
@@ -2588,6 +2638,9 @@ Responda somente JSON válido no formato {"minutes": 3, "seconds": 45}. Se não 
       let updated = 0;
 
       try {
+        const videoIds = targets.map(t => extractYoutubeVideoId(t.link)).filter(Boolean);
+        setYoutubeStatus(true, `Consultando duração oficial de ${videoIds.length} vídeo(s) em lote...`);
+        await fetchYoutubeMetadataBatch(videoIds);
         for (let i = 0; i < targets.length; i++) {
           const t = targets[i];
           const vid = extractYoutubeVideoId(t.link);
