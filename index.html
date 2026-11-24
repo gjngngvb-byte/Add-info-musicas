@@ -2180,7 +2180,7 @@ Responda somente JSON válido no formato {"minutes": 3, "seconds": 45}. Se não 
             body: JSON.stringify({
               contents: [{ parts: [{ text: prompt }] }],
               tools: [{ google_search: {} }],
-              generationConfig: { responseMimeType: "application/json", temperature: 0.1 }
+              generationConfig: { temperature: 0.1 }
             })
           },
           7000
@@ -2249,11 +2249,9 @@ Responda somente JSON válido no formato {"minutes": 3, "seconds": 45}. Se não 
 
       const cleanedTitle = cleanYoutubeTitle(title, author);
 
-      // 3. Consulta Gemini API com busca web para obter o tempo real do vídeo do link quando o player/oembed não retornou
-      if (!durationSeconds && isGeminiKeyConfigured()) {
-        durationSeconds = await fetchVideoDurationViaGemini(cleanedTitle, author, watchUrl);
-      }
-
+      // A duração é obtida pelo player do YouTube/oEmbed/NoEmbed.
+      // Não fazemos uma chamada Gemini separada por vídeo: a análise em lote
+      // reúne todas as faixas em uma única solicitação.
       return {
         videoId,
         cleanUrl: watchUrl,
@@ -2381,7 +2379,7 @@ Responda somente JSON válido no formato {"minutes": 3, "seconds": 45}. Se não 
       });
     }
 
-    async function processSingleYoutubeLink(rawUrl, silentToast = false) {
+    async function processSingleYoutubeLink(rawUrl, silentToast = false, skipGemini = false) {
       const videoId = extractYoutubeVideoId(rawUrl);
       if (!videoId) return { status: "invalid" };
 
@@ -2424,7 +2422,7 @@ Responda somente JSON válido no formato {"minutes": 3, "seconds": 45}. Se não 
         status = "created";
       }
 
-      if (targetTrack && isGeminiKeyConfigured()) {
+      if (targetTrack && isGeminiKeyConfigured() && !skipGemini) {
         try {
           if (!silentToast) {
             setYoutubeStatus(true, `Descobrindo e preenchendo via Gemini API: "${targetTrack.title}"...`);
@@ -2536,20 +2534,41 @@ Responda somente JSON válido no formato {"minutes": 3, "seconds": 45}. Se não 
       let matchedCount = 0;
 
       try {
-        for (let i = 0; i < validUrls.length; i += 3) {
-          const chunk = validUrls.slice(i, i + 3);
-          setYoutubeStatus(true, `Processando links ${i + 1} a ${Math.min(i + 3, validUrls.length)} de ${validUrls.length}...`);
-          const results = await Promise.all(chunk.map(u => processSingleYoutubeLink(u, true)));
-          results.forEach(r => {
-            if (r.status === "created") createdCount++;
-            if (r.status === "matched") matchedCount++;
-          });
-          saveState();
-          renderTracks();
+        // Primeiro coleta os metadados do YouTube sem chamar o Gemini por faixa.
+        // Depois envia todas as faixas juntas em uma única solicitação Gemini.
+        setYoutubeStatus(true, `Coletando dados de ${validUrls.length} vídeo(s) do YouTube...`);
+        const results = [];
+        for (let i = 0; i < validUrls.length; i++) {
+          setYoutubeStatus(true, `Coletando vídeo ${i + 1} de ${validUrls.length}...`);
+          results.push(await processSingleYoutubeLink(validUrls[i], true, true));
         }
 
+        results.forEach(r => {
+          if (r.status === "created") createdCount++;
+          if (r.status === "matched") matchedCount++;
+        });
+
+        const batchTracks = results
+          .filter(r => r.track && (r.status === "created" || r.status === "matched"))
+          .map(r => r.track);
+
+        if (batchTracks.length && isGeminiKeyConfigured()) {
+          setYoutubeStatus(true, `Analisando as ${batchTracks.length} faixa(s) em uma única solicitação ao Gemini...`);
+          const aiResults = await callGeminiApi(batchTracks);
+          aiStoredResults = {};
+          aiResults.forEach(item => {
+            if (item && item.id) aiStoredResults[item.id] = item;
+          });
+          applyAllAiStoredSuggestions(false, true);
+        }
+
+        saveState();
+        renderTracks();
         textarea.value = "";
-        showToast(`Concluído: ${createdCount} criada(s), ${matchedCount} atualizada(s).`, "success");
+        showToast(`Concluído: ${createdCount} criada(s), ${matchedCount} atualizada(s).${batchTracks.length && isGeminiKeyConfigured() ? " Análise Gemini feita em uma única solicitação." : ""}`, "success");
+      } catch (err) {
+        console.error("Falha ao processar lote do YouTube:", err);
+        showToast(err?.message || "Não foi possível concluir o processamento em lote.", "error");
       } finally {
         if (btn) btn.disabled = false;
         setYoutubeStatus(false);
@@ -3269,7 +3288,6 @@ ${JSON.stringify(payloadTracks)}`;
           contents: [{ parts: [{ text: prompt }] }],
           tools: [{ google_search: {} }],
           generationConfig: {
-            responseMimeType: "application/json",
             temperature: 0.2
           }
         })
@@ -3281,8 +3299,16 @@ ${JSON.stringify(payloadTracks)}`;
       }
 
       const data = await res.json();
-      const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
-      const parsed = JSON.parse(rawText);
+      const rawText = data?.candidates?.[0]?.content?.parts
+        ?.map(part => part.text || "")
+        .join("\\n") || "[]";
+      const cleanedText = rawText.replace(/^```(?:json)?\\s*/i, "").replace(/\\s*```$/, "").trim();
+      const jsonStart = cleanedText.indexOf("[");
+      const jsonEnd = cleanedText.lastIndexOf("]");
+      if (jsonStart < 0 || jsonEnd < jsonStart) {
+        throw new Error("O Gemini não retornou uma lista JSON válida. Tente novamente.");
+      }
+      const parsed = JSON.parse(cleanedText.slice(jsonStart, jsonEnd + 1));
       return Array.isArray(parsed) ? parsed : [];
     }
 
