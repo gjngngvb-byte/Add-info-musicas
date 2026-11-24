@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎵</text></svg>" />
   <title>TrackSheet Studio — Organizador de Faixas & Gerador de Arquivo</title>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -2392,6 +2395,9 @@
       const secs = meta.durationSeconds > 0 ? String(meta.durationSeconds % 60) : "";
 
       const matched = findBestMatchingTrack(meta.title, videoId);
+      let targetTrack = matched;
+      let status = "matched";
+
       if (matched) {
         if (!matched.title.trim()) matched.title = meta.title;
         if (!matched.link) matched.link = meta.cleanUrl;
@@ -2404,11 +2410,6 @@
         if (!matched.mood && inferred.mood) matched.mood = inferred.mood;
         if (!matched.license && inferred.license) matched.license = inferred.license;
         if (!matched.cue && cueFromUrl) matched.cue = cueFromUrl;
-
-        if (!silentToast) {
-          showToast(`Atualizada na lista: "${matched.title}"`, "success");
-        }
-        return { status: "matched", track: matched };
       } else {
         const maxOrder = tracks.reduce((max, t) => Math.max(max, t.order), -1);
         const created = createEmptyTrack(meta.title, maxOrder + 1);
@@ -2421,12 +2422,42 @@
         created.license = inferred.license;
         created.cue = cueFromUrl;
         tracks.push(created);
-
-        if (!silentToast) {
-          showToast(`Nova faixa adicionada: "${created.title}"`, "success");
-        }
-        return { status: "created", track: created };
+        targetTrack = created;
+        status = "created";
       }
+
+      // Completa automaticamente todos os campos vazios via Gemini AI ao adicionar por link
+      if (targetTrack && isGeminiKeyConfigured()) {
+        try {
+          if (!silentToast) {
+            setYoutubeStatus(true, `Preenchendo todos os campos com Gemini AI para "${targetTrack.title}"...`);
+          }
+          const aiResults = await callGeminiApi([targetTrack]);
+          const sug = aiResults.find(item => item && item.id === targetTrack.id) || aiResults[0];
+          if (sug) {
+            aiStoredResults[targetTrack.id] = { ...sug, id: targetTrack.id };
+            const aiFields = ["minutes", "seconds", "type", "style", "bpm", "mood", "energy", "license", "info"];
+            aiFields.forEach(f => {
+              const val = String(sug[f] || "").trim();
+              if (val && !String(targetTrack[f] || "").trim()) {
+                targetTrack[f] = val;
+              }
+            });
+          }
+        } catch (err) {
+          console.warn("Falha ao preencher automaticamente via Gemini AI:", err);
+        }
+      }
+
+      if (!silentToast) {
+        if (status === "matched") {
+          showToast(`Atualizada e preenchida com AI: "${targetTrack.title}"`, "success");
+        } else {
+          showToast(`Adicionada e preenchida com AI: "${targetTrack.title}"`, "success");
+        }
+      }
+
+      return { status, track: targetTrack };
     }
 
     function handleYoutubePaste(event) {
@@ -2594,6 +2625,52 @@
             miniPlayerInstance = new YT.Player("yt-mini-iframe-target");
           } catch (e) {}
         };
+      }
+    }
+
+    function closeMiniPlayer() {
+      if (miniPlayerInstance) {
+        try { miniPlayerInstance.destroy(); } catch (e) {}
+        miniPlayerInstance = null;
+      }
+      activeMiniPlayerTrackId = null;
+      const card = document.getElementById("yt-mini-player-card");
+      const mountEl = document.getElementById("yt-mini-player-mount");
+      if (mountEl) mountEl.innerHTML = "";
+      if (card) card.classList.add("hidden");
+      renderTracks();
+    }
+
+    function capturePlayerTimeToTrack(target) {
+      if (!activeMiniPlayerTrackId) return;
+      const track = tracks.find(t => t.id === activeMiniPlayerTrackId);
+      if (!track || !miniPlayerInstance) {
+        showToast("Aguarde o vídeo carregar no player.", "info");
+        return;
+      }
+
+      try {
+        pushUndo();
+        if (target === "duration") {
+          const dur = Math.round(miniPlayerInstance.getDuration() || 0);
+          if (dur > 0) {
+            track.minutes = String(Math.floor(dur / 60));
+            track.seconds = String(dur % 60);
+            saveState();
+            renderTracks();
+            showToast(`Duração (${track.minutes}:${String(track.seconds).padStart(2, "0")}) salva!`, "success");
+          } else {
+            showToast("Não foi possível ler a duração total.", "error");
+          }
+        } else if (target === "cue") {
+          const cur = Math.round(miniPlayerInstance.getCurrentTime() || 0);
+          track.cue = secondsToMMSS(cur);
+          saveState();
+          renderTracks();
+          showToast(`Trecho (Cue) marcado em ${track.cue}!`, "success");
+        }
+      } catch (e) {
+        showToast("Interaja com o vídeo primeiro para capturar o tempo.", "info");
       }
     }
 
