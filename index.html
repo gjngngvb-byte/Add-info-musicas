@@ -3301,8 +3301,8 @@ ${JSON.stringify(payloadTracks)}`;
       const data = await res.json();
       const rawText = data?.candidates?.[0]?.content?.parts
         ?.map(part => part.text || "")
-        .join("\\n") || "[]";
-      const cleanedText = rawText.replace(/^```(?:json)?\\s*/i, "").replace(/\\s*```$/, "").trim();
+        .join("\n") || "[]";
+      const cleanedText = rawText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
       const jsonStart = cleanedText.indexOf("[");
       const jsonEnd = cleanedText.lastIndexOf("]");
       if (jsonStart < 0 || jsonEnd < jsonStart) {
