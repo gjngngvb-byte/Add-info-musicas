@@ -45,6 +45,31 @@
       -webkit-appearance: none;
       margin: 0;
     }
+
+    /* Ajustes responsivos para telas pequenas */
+    @media (max-width: 640px) {
+      html, body { max-width: 100%; overflow-x: hidden; }
+      body { font-size: 14px; }
+      header > div { padding-left: 12px; padding-right: 12px; }
+      header .flex.flex-wrap.items-center.gap-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+      header .flex.flex-wrap.items-center.gap-2 > button { justify-content: center; min-width: 0; white-space: normal; text-align: center; }
+      header .flex.flex-wrap.items-center.gap-2 > button:first-child { grid-column: 1 / -1; }
+      main { padding: 14px 12px !important; }
+      main > section { min-width: 0; }
+      input, select, textarea { max-width: 100%; font-size: 16px !important; }
+      button { min-height: 38px; }
+      #yt-batch-submit-btn { width: 100%; justify-content: center; padding: 12px 16px; }
+      #yt-batch-box > div { display: block; }
+      #yt-batch-box > div > button { width: 100%; margin-top: 6px; }
+      #yt-status-bar { align-items: flex-start; }
+      .overflow-x-auto { max-width: 100%; -webkit-overflow-scrolling: touch; }
+      table { min-width: 680px; }
+      [role="dialog"], .modal, [id$="-modal"] > div { max-width: calc(100vw - 20px); }
+      .fixed.inset-0 { padding: 10px !important; align-items: flex-start; overflow-y: auto; }
+      .fixed.inset-0 > div { width: 100%; max-height: calc(100dvh - 20px); overflow-y: auto; }
+      .grid { min-width: 0; }
+      .flex.flex-wrap { row-gap: 8px; }
+    }
   </style>
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 font-sans antialiased selection:bg-emerald-500/30 selection:text-emerald-200 transition-colors duration-200">
@@ -261,18 +286,11 @@
           >
             <span>📋 Colar Texto</span>
           </button>
-          <button
-            id="toggle-batch-yt-btn"
-            onclick="toggleYoutubeBatchMode()"
-            class="px-3 py-1.5 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer"
-          >
-            Modo Vários Links
-          </button>
         </div>
       </div>
 
       <!-- Entrada Única -->
-      <div id="yt-single-box" class="flex flex-col sm:flex-row gap-2.5">
+      <div id="yt-single-box" class="hidden">
         <div class="relative flex-1">
           <input
             id="yt-url-input"
@@ -296,20 +314,14 @@
       </div>
 
       <!-- Entrada em Lote -->
-      <div id="yt-batch-box" class="hidden space-y-2.5">
+      <div id="yt-batch-box" class="space-y-2.5">
         <textarea
           id="yt-batch-textarea"
           rows="3"
-          placeholder="Cole vários links do YouTube aqui (um por linha)..."
+          placeholder="Cole um ou vários links do YouTube aqui (um por linha). Um único link também funciona."
           class="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-700 text-xs font-mono text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/50 focus:border-rose-500 transition"
         ></textarea>
         <div class="flex items-center justify-end gap-2">
-          <button
-            onclick="toggleYoutubeBatchMode()"
-            class="px-3 py-2 rounded-xl text-xs font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
-          >
-            Voltar para 1 link
-          </button>
           <button
             id="yt-batch-submit-btn"
             onclick="processYoutubeBatchInput()"
@@ -2027,16 +2039,6 @@
     /* =========================================================================
        INTEGRAÇÃO YOUTUBE (SMART MATCH, METADADOS & MINI-PLAYER)
        ========================================================================= */
-    function toggleYoutubeBatchMode() {
-      ytBatchMode = !ytBatchMode;
-      const singleBox = document.getElementById("yt-single-box");
-      const batchBox = document.getElementById("yt-batch-box");
-      const toggleBtn = document.getElementById("toggle-batch-yt-btn");
-      if (singleBox) singleBox.classList.toggle("hidden", ytBatchMode);
-      if (batchBox) batchBox.classList.toggle("hidden", !ytBatchMode);
-      if (toggleBtn) toggleBtn.textContent = ytBatchMode ? "Modo 1 Link" : "Modo Vários Links";
-    }
-
     function extractYoutubeVideoId(url) {
       const str = String(url || "").trim();
       if (!str) return null;
