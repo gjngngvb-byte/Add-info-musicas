@@ -10,10 +10,6 @@ permissions:
   pages: write
   id-token: write
 
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
 jobs:
   deploy:
     environment:
@@ -21,23 +17,15 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Injetar GEMINI_API_KEY
-        env:
+      - uses: actions/checkout@v4
+      - env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          sed -i "s|__GEMINI_API_KEY__|${GEMINI_API_KEY}|g" index.html
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+          mkdir -p _site
+          node -e 'const fs = require("fs"); const html = fs.readFileSync("index.html", "utf8").replace("__GEMINI_API_KEY__", process.env.GEMINI_API_KEY || ""); fs.writeFileSync("_site/index.html", html);'
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
         with:
-          path: '.'
-
-      - name: Deploy to GitHub Pages
-        id: deployment
+          path: "_site"
+      - id: deployment
         uses: actions/deploy-pages@v4
