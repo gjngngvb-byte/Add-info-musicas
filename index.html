@@ -1,0 +1,3522 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TrackSheet Studio — Organizador de Faixas & Gerador de Arquivo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Fira Code', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.35);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.55);
+    }
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 font-sans antialiased selection:bg-emerald-500/30 selection:text-emerald-200 transition-colors duration-200">
+
+  <!-- Sugestões rápidas para Tipo e Estilo -->
+  <datalist id="tipo-suggestions">
+    <option value="Vocal"></option>
+    <option value="Instrumental"></option>
+    <option value="Trilha Sonora (OST)"></option>
+    <option value="Lo-Fi / Beat"></option>
+    <option value="Remix / Edit"></option>
+    <option value="Acapella"></option>
+    <option value="Efeito Sonoro"></option>
+  </datalist>
+
+  <datalist id="estilo-suggestions">
+    <option value="Soul / Jazz"></option>
+    <option value="Game OST"></option>
+    <option value="Synthwave / Retrowave"></option>
+    <option value="Chillhop / Lo-Fi"></option>
+    <option value="Hip-Hop / Rap"></option>
+    <option value="Eletrônica / Phonk"></option>
+    <option value="Orquestral / Clássico"></option>
+    <option value="Pop / R&B"></option>
+    <option value="Indie / Alternativo"></option>
+  </datalist>
+
+  <!-- Cabeçalho Fixo -->
+  <header class="sticky top-0 z-30 backdrop-blur-xl bg-white/85 dark:bg-slate-900/85 border-b border-slate-200/80 dark:border-slate-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+        
+        <!-- Logo & Resumo -->
+        <div class="flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 shrink-0">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z" />
+              </svg>
+            </div>
+            <div>
+              <h1 class="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
+                TrackSheet Studio
+              </h1>
+              <p class="text-xs text-slate-500 dark:text-slate-400">
+                <span id="stat-total-tracks" class="font-semibold text-emerald-600 dark:text-emerald-400">0</span> faixas
+                <span class="mx-1.5 opacity-40">•</span>
+                Tempo total: <span id="stat-total-duration" class="font-mono font-medium text-slate-700 dark:text-slate-300">00:00</span>
+                <span class="mx-1.5 opacity-40 hidden sm:inline">•</span>
+                <span class="hidden sm:inline"><span id="stat-filled-tracks" class="font-semibold">0</span> preenchidas</span>
+              </p>
+            </div>
+          </div>
+
+          <!-- Botões Mobile -->
+          <div class="flex lg:hidden items-center gap-1.5">
+            <button
+              id="undo-mobile-btn"
+              onclick="undoLastAction()"
+              disabled
+              title="Desfazer (Ctrl+Z)"
+              class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-40 transition"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+              </svg>
+            </button>
+            <button
+              onclick="openHelpModal()"
+              title="Central de Ajuda"
+              class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 transition"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+            <button
+              onclick="toggleTheme()"
+              title="Alternar Tema Claro/Escuro"
+              class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+            >
+              <svg class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              <svg class="w-4 h-4 block dark:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Barra de Ações Principais -->
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Botão Gemini AI -->
+          <button
+            onclick="openAiHubModal()"
+            class="px-3.5 py-2 rounded-xl text-xs font-semibold border border-violet-300 dark:border-violet-500/40 bg-gradient-to-r from-violet-600/15 to-fuchsia-600/15 hover:from-violet-600/25 hover:to-fuchsia-600/25 text-violet-700 dark:text-violet-300 transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+          >
+            <span>🤖 Gemini AI</span>
+          </button>
+
+          <!-- Botão +20 Recursos -->
+          <button
+            onclick="toggleExtrasInfoPanel()"
+            class="px-3 py-2 rounded-xl text-xs font-medium border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <span>+20 Recursos & Facilidades</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </button>
+
+          <!-- Botão Desfazer -->
+          <button
+            id="undo-global-btn"
+            onclick="undoLastAction()"
+            disabled
+            title="Desfazer última alteração (Ctrl+Z)"
+            class="hidden lg:flex px-2.5 py-2 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 disabled:pointer-events-none transition items-center gap-1 cursor-pointer"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+            </svg>
+            <span>Desfazer</span>
+          </button>
+
+          <!-- Botão Ajuda -->
+          <button
+            onclick="openHelpModal()"
+            title="Central de Ajuda e Atalhos"
+            class="hidden lg:flex p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </button>
+
+          <!-- Botão Tema -->
+          <button
+            onclick="toggleTheme()"
+            title="Alternar Tema Claro/Escuro"
+            class="hidden lg:flex p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer"
+          >
+            <svg class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <svg class="w-4 h-4 block dark:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+          </button>
+
+          <!-- Botão Adicionar Nova Faixa -->
+          <button
+            onclick="addNewTrack()"
+            class="px-3.5 py-2 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white border border-slate-700 text-xs sm:text-sm font-medium transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+          >
+            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Adicionar Faixa</span>
+          </button>
+
+          <!-- Botão GERAR ARQUIVO -->
+          <button
+            onclick="openGenerateModal()"
+            class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-xs sm:text-sm font-semibold shadow-lg shadow-emerald-500/25 transition flex items-center gap-2 cursor-pointer"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            <span>Gerar Arquivo</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-5">
+
+    <!-- BARRA INTELIGENTE DE LINK DO YOUTUBE (Smart Match) -->
+    <section class="rounded-2xl bg-gradient-to-r from-rose-500/10 via-white to-emerald-500/10 dark:from-rose-950/30 dark:via-slate-900 dark:to-emerald-950/20 border border-rose-200/80 dark:border-rose-500/25 p-4 sm:p-5 shadow-sm">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center shadow-md shadow-rose-600/20 shrink-0">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <span>Preenchimento Automático por Link do YouTube</span>
+              <span class="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400">Smart Match</span>
+            </h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+              Cole um link (ou vários) do YouTube: se a música já existir na lista, ela será preenchida; se não existir, será criada e preenchida automaticamente.
+            </p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 self-start lg:self-center">
+          <button
+            id="fill-missing-times-btn"
+            onclick="fillMissingDurationsFromLinks()"
+            title="Buscar automaticamente os minutos e segundos de todas as faixas da lista que já possuem link do YouTube"
+            class="px-3 py-1.5 rounded-xl text-xs font-semibold border border-emerald-300 dark:border-emerald-500/40 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/25 transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <span>⏱ Preencher Tempos</span>
+          </button>
+          <button
+            onclick="openPasteTextModal()"
+            title="Colar texto gerado (.TXT, .MD, .CSV, .JSON) para preencher os campos vazios"
+            class="px-3 py-1.5 rounded-xl text-xs font-semibold border border-indigo-300 dark:border-indigo-500/40 bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-500/25 transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <span>📋 Colar Texto</span>
+          </button>
+          <button
+            id="toggle-batch-yt-btn"
+            onclick="toggleYoutubeBatchMode()"
+            class="px-3 py-1.5 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer"
+          >
+            Modo Vários Links
+          </button>
+        </div>
+      </div>
+
+      <!-- Entrada Única -->
+      <div id="yt-single-box" class="flex flex-col sm:flex-row gap-2.5">
+        <div class="relative flex-1">
+          <input
+            id="yt-url-input"
+            type="text"
+            onpaste="handleYoutubePaste(event)"
+            onkeydown="if(event.key==='Enter'){ event.preventDefault(); processYoutubeUrlInput(); }"
+            placeholder="Cole aqui o link do YouTube (ex: https://www.youtube.com/watch?v=... ou youtu.be/...)"
+            class="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/50 focus:border-rose-500 transition"
+          />
+        </div>
+        <button
+          id="yt-fetch-btn"
+          onclick="processYoutubeUrlInput()"
+          class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-white text-xs sm:text-sm font-semibold shadow-md shadow-rose-600/20 transition flex items-center justify-center gap-2 shrink-0 cursor-pointer"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          <span>Buscar e Preencher</span>
+        </button>
+      </div>
+
+      <!-- Entrada em Lote -->
+      <div id="yt-batch-box" class="hidden space-y-2.5">
+        <textarea
+          id="yt-batch-textarea"
+          rows="3"
+          placeholder="Cole vários links do YouTube aqui (um por linha)..."
+          class="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-700 text-xs font-mono text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/50 focus:border-rose-500 transition"
+        ></textarea>
+        <div class="flex items-center justify-end gap-2">
+          <button
+            onclick="toggleYoutubeBatchMode()"
+            class="px-3 py-2 rounded-xl text-xs font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+          >
+            Voltar para 1 link
+          </button>
+          <button
+            id="yt-batch-submit-btn"
+            onclick="processYoutubeBatchInput()"
+            class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow-md shadow-rose-600/20 transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <span>Processar Todos os Links</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Barra de Status da Busca YouTube -->
+      <div id="yt-status-bar" class="hidden mt-3 px-3.5 py-2.5 rounded-xl bg-white/95 dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 text-xs flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping shrink-0"></span>
+          <span id="yt-status-text" class="text-slate-700 dark:text-slate-200 font-medium truncate">Buscando metadados do YouTube...</span>
+        </div>
+        <div id="yt-live-probe-slot" class="w-28 h-16 rounded-lg overflow-hidden bg-black shrink-0 border border-slate-700 hidden"></div>
+      </div>
+    </section>
+
+    <!-- Painel Colapsável Explicando os +20 Recursos & Facilidades -->
+    <section id="extras-info-panel" class="hidden rounded-2xl bg-gradient-to-br from-indigo-50 via-white to-emerald-50/40 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/30 border border-indigo-200/80 dark:border-indigo-500/30 p-5 shadow-sm space-y-4">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h2 class="text-sm font-bold text-indigo-900 dark:text-indigo-300 flex items-center gap-2">
+            <span>✨ +20 Recursos Úteis & Novas Facilidades</span>
+          </h2>
+          <p class="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+            Regra mantida: tudo o que ficar <strong>em branco ou desmarcado</strong> sai vazio no arquivo gerado.
+          </p>
+        </div>
+        <button onclick="toggleExtrasInfoPanel()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div>
+        <h3 class="text-[11px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400 mb-2">Novas 10 Facilidades & Automação (11 a 20)</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 text-xs">
+          <div class="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/70">
+            <strong class="text-rose-600 dark:text-rose-400 block mb-0.5">11. Smart Match YouTube</strong>
+            <span class="text-slate-600 dark:text-slate-400">Busca título, duração, tipo, estilo e atualiza se já existir na lista ou cria nova.</span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/70">
+            <strong class="text-rose-600 dark:text-rose-400 block mb-0.5">12. Importação em Lote</strong>
+            <span class="text-slate-600 dark:text-slate-400">Cole vários links do YouTube de uma vez para preencher toda a lista.</span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/70">
+            <strong class="text-rose-600 dark:text-rose-400 block mb-0.5">13. Mini-Player Embutido</strong>
+            <span class="text-slate-600 dark:text-slate-400">Clique em "▶ Ouvir" em qualquer faixa com link para tocar sem sair da tela.</span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/70">
+            <strong class="text-rose-600 dark:text-rose-400 block mb-0.5">14. Capturar Tempo / Cue</strong>
+            <span class="text-slate-600 dark:text-slate-400">Capture o minuto/segundo exato direto do player para o campo Tempo ou Cue.</span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/70">
+            <strong class="text-rose-600 dark:text-rose-400 block mb-0.5">15. Varinha Mágica (Título)</strong>
+            <span class="text-slate-600 dark:text-slate-400">Analisa o título da música e sugere Tipo, Estilo, Vibe e Licença com 1 clique.</span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/70">
+            <strong class="text-amber-600 dark:text-amber-400 block mb-0.5">16. Duplicar Faixa</strong>
+            <span class="text-slate-600 dark:text-slate-400">Clona uma faixa rapidamente para marcar outro trecho ou versão.</span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/70">
+            <strong class="text-amber-600 dark:text-amber-400 block mb-0.5">17. Edição em Massa</strong>
+            <span class="text-slate-600 dark:text-slate-400">Preenche campos vazios em lote sem alterar o que você já digitou.</span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/70">
+            <strong class="text-amber-600 dark:text-amber-400 block mb-0.5">18. Limpar Campos</strong>
+            <span class="text-slate-600 dark:text-slate-400">Zera os metadados de uma faixa para em branco mantendo o título.</span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/70">
+            <strong class="text-amber-600 dark:text-amber-400 block mb-0.5">19. Histórico Desfazer (Ctrl+Z)</strong>
+            <span class="text-slate-600 dark:text-slate-400">Volte atrás em até 20 ações, exclusões ou preenchimentos automáticos.</span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/70">
+            <strong class="text-amber-600 dark:text-amber-400 block mb-0.5">20. Copiar Todos os Links</strong>
+            <span class="text-slate-600 dark:text-slate-400">Extrai e copia todos os links salvos da lista com um clique.</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-2">Metadados & Recursos Base (1 a 10)</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 text-xs">
+          <div class="p-2 rounded-xl bg-white/60 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
+            <strong class="text-indigo-600 dark:text-indigo-400">1. BPM</strong> · Andamento numérico opcional
+          </div>
+          <div class="p-2 rounded-xl bg-white/60 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
+            <strong class="text-indigo-600 dark:text-indigo-400">2. Vibe / Mood</strong> · Clima emocional
+          </div>
+          <div class="p-2 rounded-xl bg-white/60 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
+            <strong class="text-indigo-600 dark:text-indigo-400">3. Trecho (Cue)</strong> · Minutagem destaque
+          </div>
+          <div class="p-2 rounded-xl bg-white/60 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
+            <strong class="text-indigo-600 dark:text-indigo-400">4. Energia (1-5)</strong> · Escala limpa
+          </div>
+          <div class="p-2 rounded-xl bg-white/60 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
+            <strong class="text-indigo-600 dark:text-indigo-400">5. Licença</strong> · Direitos autorais
+          </div>
+          <div class="p-2 rounded-xl bg-white/60 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
+            <strong class="text-emerald-600 dark:text-emerald-400">6. Link + Atalho</strong> · URL direta
+          </div>
+          <div class="p-2 rounded-xl bg-white/60 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
+            <strong class="text-emerald-600 dark:text-emerald-400">7. Favoritos & Status</strong> · Prioridades
+          </div>
+          <div class="p-2 rounded-xl bg-white/60 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
+            <strong class="text-emerald-600 dark:text-emerald-400">8. Soma de Tempo</strong> · Cálculo total
+          </div>
+          <div class="p-2 rounded-xl bg-white/60 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
+            <strong class="text-emerald-600 dark:text-emerald-400">9. Busca & Auto-Save</strong> · LocalStorage
+          </div>
+          <div class="p-2 rounded-xl bg-white/60 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
+            <strong class="text-emerald-600 dark:text-emerald-400">10. Multi-Formato</strong> · TXT, MD, CSV, JSON
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Barra de Ferramentas: Busca, Ordenação e Utilitários -->
+    <section class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm space-y-3">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+        
+        <!-- Campo de Busca -->
+        <div class="md:col-span-5 relative">
+          <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            id="search-input"
+            type="text"
+            oninput="handleSearchInput(this.value)"
+            placeholder="Filtrar por título, tipo, estilo, vibe ou info..."
+            class="w-full pl-10 pr-8 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition"
+          />
+          <button
+            id="clear-search-btn"
+            onclick="clearSearch()"
+            class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+            title="Limpar busca"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Controle de Ordenação -->
+        <div class="md:col-span-7 flex flex-wrap items-center justify-start md:justify-end gap-2">
+          <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5">
+            <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+            </svg>
+            <label for="sort-select" class="text-xs font-medium text-slate-500 dark:text-slate-400">Ordenar:</label>
+            <select
+              id="sort-select"
+              onchange="handleSortChange(this.value)"
+              class="bg-transparent text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer pr-1"
+            >
+              <option value="manual" class="dark:bg-slate-900">Ordem Manual</option>
+              <option value="duration" class="dark:bg-slate-900">Tamanho (Duração)</option>
+              <option value="title" class="dark:bg-slate-900">Nome (Título)</option>
+              <option value="type" class="dark:bg-slate-900">Tipo</option>
+              <option value="style" class="dark:bg-slate-900">Estilo</option>
+              <option value="bpm" class="dark:bg-slate-900">BPM</option>
+              <option value="energy" class="dark:bg-slate-900">Energia</option>
+            </select>
+          </div>
+
+          <!-- Botão Inverter Direção -->
+          <button
+            id="sort-dir-btn"
+            onclick="toggleSortDirection()"
+            title="Inverter ordem (Crescente / Decrescente)"
+            class="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1.5 transition cursor-pointer"
+          >
+            <span id="sort-dir-label">↑ Crescente</span>
+          </button>
+
+          <!-- Filtro Rápido -->
+          <select
+            id="quick-filter-select"
+            onchange="handleQuickFilter(this.value)"
+            class="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer"
+          >
+            <option value="all" class="dark:bg-slate-900">Todas as faixas</option>
+            <option value="favorites" class="dark:bg-slate-900">★ Apenas Favoritas</option>
+            <option value="with-time" class="dark:bg-slate-900">⏱ Com Tempo</option>
+            <option value="without-time" class="dark:bg-slate-900">○ Sem Tempo</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Linha Secundária: Utilitários Rápidos -->
+      <div class="pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div class="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+          <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span>Campos em branco ou desmarcados saem vazios no arquivo gerado.</span>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Auto-detectar todas pelo título -->
+          <button
+            onclick="autoDetectAllFromTitles()"
+            title="Analisar todos os títulos da lista e preencher campos vazios (Tipo, Estilo, Vibe, Licença)"
+            class="px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/20 font-medium transition flex items-center gap-1 cursor-pointer"
+          >
+            <span>✨ Auto-Sugerir Todos</span>
+          </button>
+
+          <!-- Edição em Massa -->
+          <button
+            onclick="openBatchEditModal()"
+            class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium transition cursor-pointer"
+          >
+            Edição em Lote
+          </button>
+
+          <!-- Copiar Todos os Links -->
+          <button
+            onclick="copyAllSavedLinks()"
+            class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium transition cursor-pointer"
+          >
+            Copiar Links
+          </button>
+
+          <!-- Colar Texto -->
+          <button
+            onclick="openPasteTextModal()"
+            title="Colar texto copiado da lista para preencher os campos vazios"
+            class="px-2.5 py-1 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20 font-medium transition flex items-center gap-1 cursor-pointer"
+          >
+            <span>📋 Colar Texto</span>
+          </button>
+
+          <!-- Importar Arquivo -->
+          <label class="cursor-pointer px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium transition flex items-center gap-1" title="Subir arquivo .txt, .md, .csv ou .json para preencher campos vazios">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            <span>Subir Arquivo (.TXT/.MD/.CSV/.JSON)</span>
+            <input type="file" accept=".txt,.md,.csv,.json,text/plain,text/markdown,text/csv,application/json" onchange="importAnyTrackFile(event)" class="hidden" />
+          </label>
+
+          <!-- Expandir Todos Extras -->
+          <button
+            onclick="toggleAllExtrasDrawers()"
+            class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium transition cursor-pointer"
+          >
+            Mostrar/Ocultar Extras
+          </button>
+
+          <!-- Limpar Lista -->
+          <button
+            onclick="openResetModal()"
+            class="px-2.5 py-1 rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 font-medium transition cursor-pointer"
+          >
+            Limpar Lista
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Lista de Faixas -->
+    <section id="tracks-container" class="space-y-3.5" aria-label="Lista de músicas"></section>
+
+    <!-- Estado Vazio -->
+    <section id="empty-state" class="hidden text-center py-14 px-4 bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700">
+      <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto mb-3">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z" />
+        </svg>
+      </div>
+      <h3 class="text-base font-semibold text-slate-800 dark:text-slate-200">Nenhuma faixa na lista</h3>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">
+        Sua lista está limpa ou nenhuma faixa corresponde ao filtro. Cole links do YouTube acima, importe um arquivo ou adicione uma nova música.
+      </p>
+      <div class="mt-4 flex justify-center gap-2">
+        <button onclick="clearSearch(); handleQuickFilter('all'); document.getElementById('quick-filter-select').value='all';" class="px-3.5 py-2 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer">
+          Limpar Filtros
+        </button>
+        <button onclick="addNewTrack()" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-500 transition cursor-pointer">
+          + Adicionar Faixa
+        </button>
+      </div>
+    </section>
+
+    <!-- Rodapé de Ação Rápida -->
+    <div class="pt-2 pb-12 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <button
+        onclick="addNewTrack()"
+        class="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 hover:border-emerald-500 dark:hover:border-emerald-500 text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 text-sm font-medium transition flex items-center justify-center gap-2 cursor-pointer"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
+        <span>Adicionar Mais Uma Faixa</span>
+      </button>
+
+      <button
+        onclick="openGenerateModal()"
+        class="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-sm font-semibold shadow-lg shadow-emerald-500/25 transition flex items-center justify-center gap-2 cursor-pointer"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <span>Gerar Arquivo com Todas as Infos</span>
+      </button>
+    </div>
+  </main>
+
+  <!-- MINI-PLAYER FLUTUANTE DO YOUTUBE -->
+  <div id="yt-mini-player-card" class="hidden fixed bottom-5 left-5 z-40 w-[330px] max-w-[calc(100vw-2.5rem)] rounded-2xl bg-slate-900/95 backdrop-blur-md border border-slate-700 shadow-2xl overflow-hidden text-white">
+    <div class="px-3.5 py-2.5 bg-slate-800/90 border-b border-slate-700 flex items-center justify-between gap-2">
+      <div class="min-w-0">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-rose-400 block">Mini-Player YouTube</span>
+        <p id="mini-player-title" class="text-xs font-semibold truncate text-white">Carregando...</p>
+      </div>
+      <button onclick="closeMiniPlayer()" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition shrink-0 cursor-pointer" title="Fechar Player">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div class="aspect-video w-full bg-black">
+      <div id="yt-mini-player-mount" class="w-full h-full"></div>
+    </div>
+    <div class="p-2.5 bg-slate-900 flex items-center justify-between gap-2 text-[11px]">
+      <button
+        onclick="capturePlayerTimeToTrack('duration')"
+        class="flex-1 px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition cursor-pointer"
+        title="Preencher min:seg da faixa com a duração total do vídeo"
+      >
+        ⏱ Salvar Duração Total
+      </button>
+      <button
+        onclick="capturePlayerTimeToTrack('cue')"
+        class="flex-1 px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition cursor-pointer"
+        title="Salvar minuto atual do vídeo no campo Trecho (Cue)"
+      >
+        📍 Marcar Cue Atual
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: Edição em Lote -->
+  <div id="batch-edit-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-base font-bold text-slate-900 dark:text-white">Edição em Lote (Apenas Campos Vazios)</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Deixe em branco o que não quiser alterar. Não sobrescreve campos já preenchidos.</p>
+        </div>
+        <button onclick="closeBatchEditModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+        <div>
+          <label class="block font-medium text-slate-500 dark:text-slate-400 mb-1">Tipo</label>
+          <input id="batch-type" type="text" list="tipo-suggestions" placeholder="(Manter atual)" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700" />
+        </div>
+        <div>
+          <label class="block font-medium text-slate-500 dark:text-slate-400 mb-1">Estilo</label>
+          <input id="batch-style" type="text" list="estilo-suggestions" placeholder="(Manter atual)" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700" />
+        </div>
+        <div>
+          <label class="block font-medium text-slate-500 dark:text-slate-400 mb-1">Vibe / Mood</label>
+          <select id="batch-mood" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+            <option value="">(Manter atual)</option>
+            <option value="Melancólico">Melancólico</option>
+            <option value="Nostálgico">Nostálgico</option>
+            <option value="Relaxante / Chill">Relaxante / Chill</option>
+            <option value="Energético">Energético</option>
+            <option value="Épico / Cinematográfico">Épico / Cinematográfico</option>
+            <option value="Sombrio / Tenso">Sombrio / Tenso</option>
+            <option value="Alegre / Leve">Alegre / Leve</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-medium text-slate-500 dark:text-slate-400 mb-1">Status</label>
+          <select id="batch-status" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+            <option value="">(Manter atual)</option>
+            <option value="Pendente">Pendente</option>
+            <option value="Em Edição">Em Edição</option>
+            <option value="Aprovada">Aprovada</option>
+            <option value="Descartada">Descartada</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2">
+        <button onclick="closeBatchEditModal()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer">Cancelar</button>
+        <button onclick="applyBatchEdit()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer">Aplicar nos Vazios</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Central de Ajuda & Atalhos -->
+  <div id="help-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white">Central de Ajuda & Atalhos de Teclado</h3>
+        <button onclick="closeHelpModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs text-slate-600 dark:text-slate-300">
+        <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-1">
+          <strong class="text-rose-600 dark:text-rose-400 block">Como funciona o Link do YouTube?</strong>
+          <p>Ao colar qualquer link do YouTube (<code class="font-mono">youtube.com/watch?v=...</code>, <code class="font-mono">youtu.be/...</code>, <code class="font-mono">music.youtube.com</code> ou <code class="font-mono">shorts</code>), o sistema busca o título oficial, canal e duração exata (min/seg), detecta Tipo, Estilo, Vibe, Licença e Trecho (<code class="font-mono">?t=</code>), e compara com as músicas da sua lista. Se encontrar correspondência, preenche os campos dela; se não encontrar, adiciona uma nova faixa preenchida.</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+            <span>Nova Faixa</span>
+            <kbd class="px-2 py-0.5 rounded bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 font-mono text-[11px]">Ctrl + Enter</kbd>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+            <span>Gerar Arquivo</span>
+            <kbd class="px-2 py-0.5 rounded bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 font-mono text-[11px]">Ctrl + S</kbd>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+            <span>Desfazer Ação</span>
+            <kbd class="px-2 py-0.5 rounded bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 font-mono text-[11px]">Ctrl + Z</kbd>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+            <span>Fechar Janelas</span>
+            <kbd class="px-2 py-0.5 rounded bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 font-mono text-[11px]">Esc</kbd>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end">
+        <button onclick="closeHelpModal()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-900 dark:bg-white text-white dark:text-slate-900 cursor-pointer">Entendi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Colar Texto ou Subir Arquivo para Preencher Campos -->
+  <div id="paste-text-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div>
+          <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">Colar Texto ou Subir Arquivo da Lista</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            Cole o texto gerado (.TXT, .MD, .CSV ou .JSON) ou envie o arquivo. O sistema identifica as músicas e preenche os campos vazios.
+          </p>
+        </div>
+        <button onclick="closePasteTextModal()" class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="p-6 flex-1 overflow-y-auto space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <label class="cursor-pointer px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition inline-flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            <span>Carregar Arquivo (.TXT, .MD, .CSV, .JSON)</span>
+            <input type="file" accept=".txt,.md,.csv,.json,text/plain,text/markdown,text/csv,application/json" onchange="loadFileIntoPasteModal(event)" class="hidden" />
+          </label>
+
+          <span id="paste-detected-badge" class="text-xs font-medium px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+            Aguardando texto...
+          </span>
+        </div>
+
+        <textarea
+          id="paste-import-textarea"
+          rows="11"
+          oninput="updatePastePreviewStats()"
+          placeholder="Cole aqui o conteúdo do arquivo .TXT, .MD, .CSV ou .JSON...&#10;&#10;Exemplo:&#10;1. Amy Winehouse - Back To Black&#10;   Tempo: 3:59&#10;   Tipo: Remix / Edit&#10;   Estilo: Soul / Jazz"
+          class="w-full p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 font-mono text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-y"
+        ></textarea>
+
+        <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 space-y-2 text-xs">
+          <label class="flex items-start gap-2.5 cursor-pointer select-none">
+            <input type="radio" name="paste-import-mode" value="fill-empty" checked class="mt-0.5 text-emerald-500 focus:ring-emerald-500" />
+            <div>
+              <strong class="text-slate-800 dark:text-slate-200 block">Preencher apenas campos vazios (Recomendado)</strong>
+              <span class="text-slate-500 dark:text-slate-400">Mantém o que você já preencheu e completa somente o que estiver em branco.</span>
+            </div>
+          </label>
+          <label class="flex items-start gap-2.5 cursor-pointer select-none">
+            <input type="radio" name="paste-import-mode" value="overwrite" class="mt-0.5 text-emerald-500 focus:ring-emerald-500" />
+            <div>
+              <strong class="text-slate-800 dark:text-slate-200 block">Sobrescrever dados existentes</strong>
+              <span class="text-slate-500 dark:text-slate-400">Substitui os valores atuais pelos valores do texto colado.</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 bg-slate-50/70 dark:bg-slate-900">
+        <button onclick="closePasteTextModal()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300/80 dark:hover:bg-slate-700 transition cursor-pointer">
+          Cancelar
+        </button>
+        <button onclick="confirmPasteTextImport()" class="px-5 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/20 transition cursor-pointer">
+          Importar e Preencher
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Confirmar Limpeza Total da Lista -->
+  <div id="reset-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center gap-3 text-rose-500">
+        <div class="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-slate-900 dark:text-white">Limpar Toda a Lista?</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Isso removerá todas as faixas atuais para você começar uma lista do zero.</p>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2">
+        <button onclick="closeResetModal()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer">
+          Cancelar
+        </button>
+        <button onclick="confirmResetTracks()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white transition cursor-pointer">
+          Sim, Limpar Tudo
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Gerar Arquivo -->
+  <div id="generate-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div>
+          <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">Gerar & Exportar Arquivo da Lista</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            Campos deixados em branco ou desmarcados permanecem vazios no arquivo.
+          </p>
+        </div>
+        <button onclick="closeGenerateModal()" class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Configurações do Arquivo -->
+      <div class="px-6 py-3.5 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+        <div>
+          <label class="block font-medium text-slate-600 dark:text-slate-300 mb-1">Nome do Arquivo</label>
+          <input
+            id="export-filename"
+            type="text"
+            value="lista-musicas"
+            oninput="refreshExportPreview()"
+            class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-600 dark:text-slate-300 mb-1">Formato</label>
+          <div class="grid grid-cols-4 gap-1 bg-slate-200/70 dark:bg-slate-900 p-1 rounded-xl">
+            <button type="button" onclick="setExportFormat('txt')" id="fmt-btn-txt" class="fmt-btn py-1.5 rounded-lg font-semibold bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm transition cursor-pointer">.TXT</button>
+            <button type="button" onclick="setExportFormat('md')" id="fmt-btn-md" class="fmt-btn py-1.5 rounded-lg font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition cursor-pointer">.MD</button>
+            <button type="button" onclick="setExportFormat('csv')" id="fmt-btn-csv" class="fmt-btn py-1.5 rounded-lg font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition cursor-pointer">.CSV</button>
+            <button type="button" onclick="setExportFormat('json')" id="fmt-btn-json" class="fmt-btn py-1.5 rounded-lg font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition cursor-pointer">.JSON</button>
+          </div>
+        </div>
+
+        <div class="flex flex-col justify-center gap-1.5">
+          <label class="inline-flex items-center gap-2 cursor-pointer select-none text-slate-700 dark:text-slate-300">
+            <input id="export-include-extras" type="checkbox" checked onchange="refreshExportPreview()" class="rounded text-emerald-500 focus:ring-emerald-500" />
+            <span>Incluir campos extras (+10)</span>
+          </label>
+          <label class="inline-flex items-center gap-2 cursor-pointer select-none text-slate-700 dark:text-slate-300">
+            <input id="export-include-header" type="checkbox" checked onchange="refreshExportPreview()" class="rounded text-emerald-500 focus:ring-emerald-500" />
+            <span>Incluir cabeçalho resumo</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Prévia do Arquivo -->
+      <div class="p-6 flex-1 overflow-y-auto space-y-2">
+        <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+          <span>Pré-visualização exata do conteúdo que será salvo:</span>
+          <span id="export-char-count" class="font-mono">0 caracteres</span>
+        </div>
+        <textarea
+          id="export-preview-textarea"
+          readonly
+          rows="13"
+          class="w-full p-4 rounded-xl bg-slate-950 text-emerald-300 font-mono text-xs leading-relaxed border border-slate-800 focus:outline-none resize-none"
+        ></textarea>
+      </div>
+
+      <!-- Rodapé Modal -->
+      <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-end gap-2.5 bg-slate-50/70 dark:bg-slate-900">
+        <button
+          onclick="copyExportText()"
+          class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium bg-slate-200/80 dark:bg-slate-800 hover:bg-slate-300/80 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition flex items-center gap-1.5 cursor-pointer"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+          <span>Copiar Texto</span>
+        </button>
+
+        <button
+          onclick="downloadGeneratedFile()"
+          class="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white shadow-lg shadow-emerald-500/25 transition flex items-center gap-2 cursor-pointer"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          <span>Baixar Arquivo</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Central Gemini AI (Preencher Vazios & Indicar Alterações) -->
+  <div id="ai-hub-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+      <!-- Cabeçalho -->
+      <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-violet-500/10 via-transparent to-fuchsia-500/10">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600 text-white flex items-center justify-center shadow-md shadow-violet-500/25 shrink-0">
+            <span class="text-base">🤖</span>
+          </div>
+          <div>
+            <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">Assistente Musical Gemini AI</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+              Analisa suas músicas, preenche campos vazios (tempo, BPM, estilo, licença, vibe, +info) e indica melhorias nos dados já preenchidos.
+            </p>
+          </div>
+        </div>
+        <button onclick="closeAiHubModal()" class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Controles de Execução -->
+      <div class="px-6 py-3.5 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900">
+        <div class="flex flex-wrap items-center gap-3 text-xs">
+          <label class="inline-flex items-center gap-2 cursor-pointer select-none font-medium text-slate-700 dark:text-slate-200">
+            <input id="ai-auto-fill-empty-chk" type="checkbox" checked class="rounded text-violet-600 focus:ring-violet-500" />
+            <span>Preencher vazios automaticamente ao analisar</span>
+          </label>
+          <label class="inline-flex items-center gap-2 cursor-pointer select-none font-medium text-slate-700 dark:text-slate-200">
+            <input id="ai-only-incomplete-chk" type="checkbox" class="rounded text-violet-600 focus:ring-violet-500" />
+            <span>Analisar apenas faixas com campos vazios</span>
+          </label>
+        </div>
+
+        <button
+          id="ai-run-all-btn"
+          onclick="analyzeAllTracksWithGemini()"
+          class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white shadow-lg shadow-violet-500/25 transition flex items-center gap-2 cursor-pointer"
+        >
+          <span>✨ Analisar Lista com Gemini AI</span>
+        </button>
+      </div>
+
+      <!-- Barra de Progresso AI -->
+      <div id="ai-progress-bar" class="hidden px-6 py-2.5 bg-violet-500/10 border-b border-violet-500/20 text-xs text-violet-700 dark:text-violet-300 flex items-center gap-2.5">
+        <span class="w-2.5 h-2.5 rounded-full bg-violet-500 animate-ping shrink-0"></span>
+        <span id="ai-progress-text" class="font-medium">Consultando Gemini AI...</span>
+      </div>
+
+      <!-- Área de Resultados -->
+      <div id="ai-results-container" class="p-6 flex-1 overflow-y-auto space-y-3 text-xs">
+        <div class="text-center py-10 px-4 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 space-y-2">
+          <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">Pronto para analisar sua lista</p>
+          <p class="max-w-lg mx-auto">
+            Clique em <strong>"Analisar Lista com Gemini AI"</strong> acima para preencher todas as músicas de uma vez, ou clique no botão <strong>🤖 AI</strong> dentro de qualquer faixa individual.
+          </p>
+          <p class="text-[11px] text-slate-400">
+            O Gemini preenche Tempo, Tipo, Estilo, BPM, Vibe, Energia, Licença real (Copyright vs. Creative Commons/Livre), +Info e aponta possíveis correções nos campos já preenchidos.
+          </p>
+        </div>
+      </div>
+
+      <!-- Rodapé -->
+      <div class="px-6 py-3.5 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 bg-slate-50/70 dark:bg-slate-900">
+        <div class="flex flex-wrap items-center gap-2">
+          <button
+            id="ai-apply-all-empty-btn"
+            onclick="applyAllAiStoredSuggestions(false)"
+            class="hidden px-3.5 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition cursor-pointer"
+          >
+            Preencher Todos os Vazios
+          </button>
+          <button
+            id="ai-apply-all-changes-btn"
+            onclick="applyAllAiStoredSuggestions(true)"
+            class="hidden px-3.5 py-2 rounded-xl text-xs font-semibold bg-violet-600 hover:bg-violet-500 text-white transition cursor-pointer"
+          >
+            Aceitar Todas as Alterações Indicadas
+          </button>
+        </div>
+
+        <button onclick="closeAiHubModal()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300/80 dark:hover:bg-slate-700 transition cursor-pointer">
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Container de Notificações (Toast) -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+  <script>
+    //API AQUI 👇🏻
+    const GEMINI_API_KEY = "";
+
+    /* =========================================================================
+       ESTADO INICIAL E ESTRUTURA DE DADOS
+       ========================================================================= */
+    const STORAGE_KEY = "tracksheet_studio_v3";
+
+    const DEFAULT_TITLES = [];
+
+    const LEGACY_DEFAULT_TITLES = new Set([
+      "Amy Winehouse - Back To Black",
+      "Animal Crossing New Leaf 1PM Soundtrack",
+      "Bakar - Hell N Back (Instrumental)",
+      "Caleb Arredondo - Echo Sax End",
+      "Dana and Alden - Dragonfly",
+      "Death of a Bluebird - Rorschach Roy",
+      "Gone, Gone / Thank You - Tyler, The Creator",
+      "i was only temporary",
+      "massobeats - honey jam",
+      "New Donk City - Super Mario Odyssey",
+      "Shaka Boom",
+      "Synthwave Goose - Blade Runner 2049",
+      "The Cannery - Kevin MacLeod",
+      "ჩუბინა"
+    ]);
+
+    function createEmptyTrack(title = "", orderIndex = 0) {
+      return {
+        id: "trk_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
+        order: orderIndex,
+        title: title,
+        minutes: "",
+        seconds: "",
+        type: "",
+        style: "",
+        info: "",
+        bpm: "",
+        mood: "",
+        cue: "",
+        energy: "",
+        license: "",
+        link: "",
+        status: "",
+        favorite: false,
+        showExtras: false
+      };
+    }
+
+    let tracks = [];
+    let undoStack = [];
+    let searchQuery = "";
+    let sortBy = "manual";
+    let sortDir = "asc";
+    let quickFilter = "all";
+    let exportFormat = "txt";
+    let allExtrasOpen = false;
+    let ytBatchMode = false;
+    let ytApiReady = false;
+    let miniPlayerInstance = null;
+    let activeMiniPlayerTrackId = null;
+    let aiStoredResults = {};
+
+    /* =========================================================================
+       PERSISTÊNCIA E HISTÓRICO (DESFAZER)
+       ========================================================================= */
+    function isTrackMetadataEmpty(t) {
+      return (
+        !String(t.minutes || "").trim() &&
+        !String(t.seconds || "").trim() &&
+        !String(t.type || "").trim() &&
+        !String(t.style || "").trim() &&
+        !String(t.info || "").trim() &&
+        !String(t.bpm || "").trim() &&
+        !String(t.mood || "").trim() &&
+        !String(t.cue || "").trim() &&
+        !String(t.energy || "").trim() &&
+        !String(t.license || "").trim() &&
+        !String(t.link || "").trim() &&
+        !String(t.status || "").trim() &&
+        !t.favorite
+      );
+    }
+
+    function loadState() {
+      try {
+        const savedTheme = localStorage.getItem("tracksheet_theme");
+        if (savedTheme === "light") {
+          document.documentElement.classList.remove("dark");
+        } else {
+          document.documentElement.classList.add("dark");
+        }
+
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            const onlyLegacyDefaults =
+              parsed.length > 0 &&
+              parsed.every(t => LEGACY_DEFAULT_TITLES.has(String(t.title || "").trim()) && isTrackMetadataEmpty(t));
+
+            if (onlyLegacyDefaults) {
+              tracks = [];
+              saveState();
+            } else {
+              tracks = parsed.map((item, idx) => ({
+                ...createEmptyTrack("", idx),
+                ...item
+              }));
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("Erro ao carregar estado salvo:", err);
+        tracks = [];
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(tracks));
+      } catch (err) {
+        console.warn("Erro ao salvar no localStorage:", err);
+      }
+    }
+
+    function pushUndo() {
+      try {
+        undoStack.push(JSON.stringify(tracks));
+        if (undoStack.length > 20) undoStack.shift();
+        updateUndoButtons();
+      } catch (e) {
+        // Ignora erro de serialização
+      }
+    }
+
+    function undoLastAction() {
+      if (undoStack.length === 0) return;
+      try {
+        const snapshot = undoStack.pop();
+        tracks = JSON.parse(snapshot);
+        saveState();
+        renderTracks();
+        updateUndoButtons();
+        showToast("Última ação desfeita.", "info");
+      } catch (err) {
+        showToast("Não foi possível desfazer.", "error");
+      }
+    }
+
+    function updateUndoButtons() {
+      const disabled = undoStack.length === 0;
+      const btnDesktop = document.getElementById("undo-global-btn");
+      const btnMobile = document.getElementById("undo-mobile-btn");
+      if (btnDesktop) btnDesktop.disabled = disabled;
+      if (btnMobile) btnMobile.disabled = disabled;
+    }
+
+    /* =========================================================================
+       TEMA E PAINÉIS DE UI
+       ========================================================================= */
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.toggle("dark");
+      localStorage.setItem("tracksheet_theme", isDark ? "dark" : "light");
+    }
+
+    function toggleExtrasInfoPanel() {
+      const panel = document.getElementById("extras-info-panel");
+      if (panel) panel.classList.toggle("hidden");
+    }
+
+    function toggleAllExtrasDrawers() {
+      allExtrasOpen = !allExtrasOpen;
+      tracks.forEach(t => {
+        t.showExtras = allExtrasOpen;
+      });
+      saveState();
+      renderTracks();
+    }
+
+    /* =========================================================================
+       UTILITÁRIOS DE TEMPO E FORMATAÇÃO
+       ========================================================================= */
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function getTrackDurationSeconds(track) {
+      const m = parseInt(track.minutes, 10);
+      const s = parseInt(track.seconds, 10);
+      const validM = Number.isFinite(m) && m >= 0 ? m : 0;
+      const validS = Number.isFinite(s) && s >= 0 ? s : 0;
+      return validM * 60 + validS;
+    }
+
+    function formatTrackDuration(track) {
+      const mStr = String(track.minutes ?? "").trim();
+      const sStr = String(track.seconds ?? "").trim();
+      if (!mStr && !sStr) return "";
+      const m = mStr ? parseInt(mStr, 10) || 0 : 0;
+      const s = sStr ? parseInt(sStr, 10) || 0 : 0;
+      return `${m}:${String(s).padStart(2, "0")}`;
+    }
+
+    function formatTotalSeconds(totalSecs) {
+      if (!totalSecs || totalSecs <= 0) return "00:00";
+      const hrs = Math.floor(totalSecs / 3600);
+      const mins = Math.floor((totalSecs % 3600) / 60);
+      const secs = totalSecs % 60;
+      if (hrs > 0) {
+        return `${hrs}h ${String(mins).padStart(2, "0")}m ${String(secs).padStart(2, "0")}s`;
+      }
+      return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    }
+
+    function secondsToMMSS(totalSecs) {
+      const s = Math.max(0, Math.round(totalSecs));
+      const mins = Math.floor(s / 60);
+      const secs = s % 60;
+      return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    }
+
+    function countExtraFieldsFilled(track) {
+      let count = 0;
+      if (String(track.bpm || "").trim()) count++;
+      if (String(track.mood || "").trim()) count++;
+      if (String(track.cue || "").trim()) count++;
+      if (String(track.energy || "").trim()) count++;
+      if (String(track.license || "").trim()) count++;
+      if (String(track.link || "").trim()) count++;
+      if (String(track.status || "").trim()) count++;
+      return count;
+    }
+
+    /* =========================================================================
+       FILTRAGEM, ORDENAÇÃO E ESTATÍSTICAS
+       ========================================================================= */
+    function getFilteredAndSortedTracks() {
+      const q = searchQuery.trim().toLowerCase();
+
+      let list = tracks.filter(track => {
+        if (quickFilter === "favorites" && !track.favorite) return false;
+        if (quickFilter === "with-time" && getTrackDurationSeconds(track) <= 0) return false;
+        if (quickFilter === "without-time" && getTrackDurationSeconds(track) > 0) return false;
+
+        if (!q) return true;
+        const haystack = [
+          track.title,
+          track.type,
+          track.style,
+          track.info,
+          track.mood,
+          track.license,
+          track.status,
+          track.cue,
+          track.bpm,
+          track.link
+        ]
+          .join(" ")
+          .toLowerCase();
+        return haystack.includes(q);
+      });
+
+      const dirMult = sortDir === "asc" ? 1 : -1;
+
+      if (sortBy === "manual") {
+        list.sort((a, b) => (a.order - b.order) * dirMult);
+      } else if (sortBy === "duration") {
+        list.sort((a, b) => {
+          const da = getTrackDurationSeconds(a);
+          const db = getTrackDurationSeconds(b);
+          if (da === db) return (a.order - b.order);
+          return (da - db) * dirMult;
+        });
+      } else if (sortBy === "title") {
+        list.sort((a, b) => a.title.localeCompare(b.title, "pt-BR", { sensitivity: "base" }) * dirMult);
+      } else if (sortBy === "type") {
+        list.sort((a, b) => (a.type || "zzz").localeCompare(b.type || "zzz", "pt-BR", { sensitivity: "base" }) * dirMult);
+      } else if (sortBy === "style") {
+        list.sort((a, b) => (a.style || "zzz").localeCompare(b.style || "zzz", "pt-BR", { sensitivity: "base" }) * dirMult);
+      } else if (sortBy === "bpm") {
+        list.sort((a, b) => ((parseFloat(a.bpm) || 0) - (parseFloat(b.bpm) || 0)) * dirMult);
+      } else if (sortBy === "energy") {
+        list.sort((a, b) => ((parseInt(a.energy, 10) || 0) - (parseInt(b.energy, 10) || 0)) * dirMult);
+      }
+
+      return list;
+    }
+
+    function updateStats() {
+      const totalTracksEl = document.getElementById("stat-total-tracks");
+      const totalDurationEl = document.getElementById("stat-total-duration");
+      const filledTracksEl = document.getElementById("stat-filled-tracks");
+
+      let totalSecs = 0;
+      let filledCount = 0;
+
+      tracks.forEach(t => {
+        totalSecs += getTrackDurationSeconds(t);
+        if (!isTrackMetadataEmpty(t)) filledCount++;
+      });
+
+      if (totalTracksEl) totalTracksEl.textContent = String(tracks.length);
+      if (totalDurationEl) totalDurationEl.textContent = formatTotalSeconds(totalSecs);
+      if (filledTracksEl) filledTracksEl.textContent = String(filledCount);
+    }
+
+    /* =========================================================================
+       RENDERIZAÇÃO DA LISTA DE FAIXAS
+       ========================================================================= */
+    function renderTracks() {
+      const container = document.getElementById("tracks-container");
+      const emptyState = document.getElementById("empty-state");
+      if (!container || !emptyState) return;
+
+      updateStats();
+      const visibleTracks = getFilteredAndSortedTracks();
+
+      if (visibleTracks.length === 0) {
+        container.innerHTML = "";
+        emptyState.classList.remove("hidden");
+        return;
+      }
+
+      emptyState.classList.add("hidden");
+
+      container.innerHTML = visibleTracks
+        .map((track, displayIdx) => {
+          const extraCount = countExtraFieldsFilled(track);
+          const ytId = extractYoutubeVideoId(track.link);
+          const isPlayingThis = activeMiniPlayerTrackId === track.id;
+
+          return `
+            <article
+              data-track-id="${escapeHtml(track.id)}"
+              class="group rounded-2xl bg-white dark:bg-slate-900 border ${
+                track.favorite
+                  ? "border-amber-300/80 dark:border-amber-500/40 shadow-amber-500/5"
+                  : "border-slate-200 dark:border-slate-800"
+              } p-4 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-all"
+            >
+              <!-- Linha Superior: Índice, Favorito, Título e Ações -->
+              <div class="flex flex-col lg:flex-row lg:items-center gap-3">
+                <div class="flex items-center gap-2.5 flex-1 min-w-0">
+                  <!-- Número + Setas de Ordem -->
+                  <div class="flex items-center gap-1 shrink-0">
+                    <span class="w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono text-xs font-bold flex items-center justify-center">
+                      ${displayIdx + 1}
+                    </span>
+                    ${
+                      sortBy === "manual"
+                        ? `
+                      <div class="flex flex-col">
+                        <button
+                          type="button"
+                          onclick="moveTrack('${track.id}', -1)"
+                          title="Mover para cima"
+                          class="text-slate-400 hover:text-emerald-500 leading-none p-0.5 cursor-pointer"
+                        >▲</button>
+                        <button
+                          type="button"
+                          onclick="moveTrack('${track.id}', 1)"
+                          title="Mover para baixo"
+                          class="text-slate-400 hover:text-emerald-500 leading-none p-0.5 cursor-pointer"
+                        >▼</button>
+                      </div>
+                    `
+                        : ""
+                    }
+                  </div>
+
+                  <!-- Botão Favorito -->
+                  <button
+                    type="button"
+                    onclick="toggleFavorite('${track.id}')"
+                    title="${track.favorite ? "Remover dos favoritos" : "Marcar como favorita"}"
+                    class="p-1.5 rounded-xl transition shrink-0 cursor-pointer ${
+                      track.favorite
+                        ? "text-amber-400 bg-amber-500/10"
+                        : "text-slate-300 dark:text-slate-600 hover:text-amber-400"
+                    }"
+                  >
+                    <svg class="w-5 h-5" fill="${track.favorite ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                    </svg>
+                  </button>
+
+                  <!-- Título da Música -->
+                  <input
+                    type="text"
+                    value="${escapeHtml(track.title)}"
+                    onchange="updateTrackField('${track.id}', 'title', this.value)"
+                    placeholder="Nome da música ou artista - faixa..."
+                    class="w-full px-3 py-1.5 rounded-xl bg-slate-50/70 dark:bg-slate-800/60 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-950 text-sm sm:text-base font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none transition"
+                  />
+                </div>
+
+                <!-- Botões de Ação da Faixa -->
+                <div class="flex flex-wrap items-center gap-1.5 shrink-0">
+                  ${
+                    ytId
+                      ? `
+                    <button
+                      type="button"
+                      onclick="openMiniPlayer('${track.id}')"
+                      class="px-2.5 py-1.5 rounded-xl text-xs font-semibold ${
+                        isPlayingThis
+                          ? "bg-rose-600 text-white"
+                          : "bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20"
+                      } transition flex items-center gap-1 cursor-pointer"
+                      title="Ouvir no Mini-Player embutido"
+                    >
+                      <span>▶ Ouvir</span>
+                    </button>
+                  `
+                      : ""
+                  }
+
+                  <button
+                    type="button"
+                    onclick="autoDetectSingleTrack('${track.id}')"
+                    title="Auto-sugerir Tipo, Estilo, Vibe e Licença pelo título"
+                    class="px-2.5 py-1.5 rounded-xl text-xs font-medium bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 transition cursor-pointer"
+                  >
+                    ✨ Sugerir
+                  </button>
+
+                  <button
+                    type="button"
+                    onclick="analyzeSingleTrackWithGemini('${track.id}')"
+                    title="Analisar esta faixa com Gemini AI"
+                    class="px-2.5 py-1.5 rounded-xl text-xs font-medium bg-violet-500/10 hover:bg-violet-500/20 text-violet-700 dark:text-violet-300 transition cursor-pointer"
+                  >
+                    🤖 AI
+                  </button>
+
+                  <button
+                    type="button"
+                    onclick="toggleTrackExtras('${track.id}')"
+                    class="px-2.5 py-1.5 rounded-xl text-xs font-medium border ${
+                      track.showExtras || extraCount > 0
+                        ? "border-indigo-300 dark:border-indigo-500/40 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300"
+                        : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                    } hover:bg-indigo-500/20 transition flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>Extras</span>
+                    ${
+                      extraCount > 0
+                        ? `<span class="px-1.5 py-0.2 rounded-full bg-indigo-600 text-white text-[10px] font-bold">${extraCount}</span>`
+                        : ""
+                    }
+                  </button>
+
+                  <button
+                    type="button"
+                    onclick="duplicateTrack('${track.id}')"
+                    title="Duplicar faixa"
+                    class="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+
+                  <button
+                    type="button"
+                    onclick="clearTrackMetadata('${track.id}')"
+                    title="Limpar campos mantendo o título"
+                    class="p-1.5 rounded-xl text-slate-400 hover:text-amber-500 hover:bg-amber-500/10 transition cursor-pointer"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 001.414.586H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z" />
+                    </svg>
+                  </button>
+
+                  <button
+                    type="button"
+                    onclick="deleteTrack('${track.id}')"
+                    title="Remover faixa"
+                    class="p-1.5 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition cursor-pointer"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Linha Principal de Metadados: Tempo (Min/Seg), Tipo, Estilo e +Info -->
+              <div class="mt-3 grid grid-cols-1 sm:grid-cols-12 gap-2.5 text-xs">
+                <!-- Tempo (Min : Seg) -->
+                <div class="sm:col-span-3">
+                  <label class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">Tempo (Min : Seg)</label>
+                  <div class="flex items-center gap-1.5">
+                    <input
+                      type="number"
+                      min="0"
+                      max="999"
+                      value="${escapeHtml(track.minutes)}"
+                      onchange="updateTrackDuration('${track.id}', 'minutes', this.value)"
+                      placeholder="min"
+                      class="w-full px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 font-mono text-center text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                    />
+                    <span class="font-mono font-bold text-slate-400">:</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max="59"
+                      value="${escapeHtml(track.seconds)}"
+                      onchange="updateTrackDuration('${track.id}', 'seconds', this.value)"
+                      placeholder="seg"
+                      class="w-full px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 font-mono text-center text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                    />
+                  </div>
+                </div>
+
+                <!-- Tipo -->
+                <div class="sm:col-span-3">
+                  <label class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">Tipo</label>
+                  <input
+                    type="text"
+                    list="tipo-suggestions"
+                    value="${escapeHtml(track.type)}"
+                    onchange="updateTrackField('${track.id}', 'type', this.value)"
+                    placeholder="Vocal, Instrumental, OST..."
+                    class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                  />
+                </div>
+
+                <!-- Estilo -->
+                <div class="sm:col-span-3">
+                  <label class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">Estilo</label>
+                  <input
+                    type="text"
+                    list="estilo-suggestions"
+                    value="${escapeHtml(track.style)}"
+                    onchange="updateTrackField('${track.id}', 'style', this.value)"
+                    placeholder="Soul / Jazz, Lo-Fi, Game OST..."
+                    class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                  />
+                </div>
+
+                <!-- +Info / Observações -->
+                <div class="sm:col-span-3">
+                  <label class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">+Info / Notas</label>
+                  <input
+                    type="text"
+                    value="${escapeHtml(track.info)}"
+                    onchange="updateTrackField('${track.id}', 'info', this.value)"
+                    placeholder="Observações livres..."
+                    class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                  />
+                </div>
+              </div>
+
+              <!-- Gaveta de Recursos Extras (+10 Metadados) -->
+              ${
+                track.showExtras
+                  ? `
+                <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-2.5 text-xs">
+                  <!-- 1. BPM -->
+                  <div>
+                    <label class="block text-[11px] font-medium text-indigo-600 dark:text-indigo-400 mb-1">BPM</label>
+                    <input
+                      type="number"
+                      min="20"
+                      max="350"
+                      value="${escapeHtml(track.bpm)}"
+                      onchange="updateTrackField('${track.id}', 'bpm', this.value)"
+                      placeholder="Ex: 120"
+                      class="w-full px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 font-mono text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                    />
+                  </div>
+
+                  <!-- 2. Vibe / Mood -->
+                  <div>
+                    <label class="block text-[11px] font-medium text-indigo-600 dark:text-indigo-400 mb-1">Vibe / Mood</label>
+                    <select
+                      onchange="updateTrackField('${track.id}', 'mood', this.value)"
+                      class="w-full px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                    >
+                      <option value="" ${!track.mood ? "selected" : ""}>(Em branco)</option>
+                      ${[
+                        "Melancólico",
+                        "Nostálgico",
+                        "Relaxante / Chill",
+                        "Energético",
+                        "Épico / Cinematográfico",
+                        "Sombrio / Tenso",
+                        "Alegre / Leve"
+                      ]
+                        .map(
+                          m =>
+                            `<option value="${m}" ${track.mood === m ? "selected" : ""}>${m}</option>`
+                        )
+                        .join("")}
+                      ${
+                        track.mood &&
+                        ![
+                          "Melancólico",
+                          "Nostálgico",
+                          "Relaxante / Chill",
+                          "Energético",
+                          "Épico / Cinematográfico",
+                          "Sombrio / Tenso",
+                          "Alegre / Leve"
+                        ].includes(track.mood)
+                          ? `<option value="${escapeHtml(track.mood)}" selected>${escapeHtml(track.mood)}</option>`
+                          : ""
+                      }
+                    </select>
+                  </div>
+
+                  <!-- 3. Trecho (Cue) -->
+                  <div>
+                    <label class="block text-[11px] font-medium text-indigo-600 dark:text-indigo-400 mb-1">Trecho (Cue)</label>
+                    <input
+                      type="text"
+                      value="${escapeHtml(track.cue)}"
+                      onchange="updateTrackField('${track.id}', 'cue', this.value)"
+                      placeholder="Ex: 01:15"
+                      class="w-full px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 font-mono text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                    />
+                  </div>
+
+                  <!-- 4. Energia (1-5) -->
+                  <div>
+                    <label class="block text-[11px] font-medium text-indigo-600 dark:text-indigo-400 mb-1">Energia (1-5)</label>
+                    <select
+                      onchange="updateTrackField('${track.id}', 'energy', this.value)"
+                      class="w-full px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                    >
+                      <option value="" ${!track.energy ? "selected" : ""}>(Em branco)</option>
+                      <option value="1" ${String(track.energy) === "1" ? "selected" : ""}>1 — Muito Calma</option>
+                      <option value="2" ${String(track.energy) === "2" ? "selected" : ""}>2 — Suave</option>
+                      <option value="3" ${String(track.energy) === "3" ? "selected" : ""}>3 — Moderada</option>
+                      <option value="4" ${String(track.energy) === "4" ? "selected" : ""}>4 — Alta</option>
+                      <option value="5" ${String(track.energy) === "5" ? "selected" : ""}>5 — Máxima</option>
+                    </select>
+                  </div>
+
+                  <!-- 5. Licença -->
+                  <div>
+                    <label class="block text-[11px] font-medium text-indigo-600 dark:text-indigo-400 mb-1">Licença</label>
+                    <input
+                      type="text"
+                      value="${escapeHtml(track.license)}"
+                      onchange="updateTrackField('${track.id}', 'license', this.value)"
+                      placeholder="Copyright, CC, Livre..."
+                      class="w-full px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                    />
+                  </div>
+
+                  <!-- 7. Status -->
+                  <div>
+                    <label class="block text-[11px] font-medium text-emerald-600 dark:text-emerald-400 mb-1">Status</label>
+                    <select
+                      onchange="updateTrackField('${track.id}', 'status', this.value)"
+                      class="w-full px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                    >
+                      <option value="" ${!track.status ? "selected" : ""}>(Em branco)</option>
+                      ${["Pendente", "Em Edição", "Aprovada", "Descartada"]
+                        .map(
+                          s =>
+                            `<option value="${s}" ${track.status === s ? "selected" : ""}>${s}</option>`
+                        )
+                        .join("")}
+                    </select>
+                  </div>
+
+                  <!-- 6. Link -->
+                  <div>
+                    <label class="block text-[11px] font-medium text-emerald-600 dark:text-emerald-400 mb-1">Link / URL</label>
+                    <div class="flex items-center gap-1">
+                      <input
+                        type="url"
+                        value="${escapeHtml(track.link)}"
+                        onchange="updateTrackField('${track.id}', 'link', this.value)"
+                        placeholder="https://..."
+                        class="w-full px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                      />
+                      ${
+                        track.link
+                          ? `<a href="${escapeHtml(track.link)}" target="_blank" rel="noopener noreferrer" title="Abrir link em nova aba" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 shrink-0">↗</a>`
+                          : ""
+                      }
+                    </div>
+                  </div>
+                </div>
+              `
+                  : ""
+              }
+            </article>
+          `;
+        })
+        .join("");
+    }
+
+    /* =========================================================================
+       AÇÕES CRUD DAS FAIXAS
+       ========================================================================= */
+    function addNewTrack(prefill = null, focusTitle = true) {
+      pushUndo();
+      const maxOrder = tracks.reduce((acc, t) => Math.max(acc, t.order || 0), -1);
+      const newTrack = {
+        ...createEmptyTrack("", maxOrder + 1),
+        ...(prefill || {})
+      };
+      tracks.push(newTrack);
+      saveState();
+      renderTracks();
+
+      if (focusTitle) {
+        setTimeout(() => {
+          const card = document.querySelector(`[data-track-id="${newTrack.id}"] input[type="text"]`);
+          if (card) card.focus();
+        }, 40);
+      }
+      return newTrack;
+    }
+
+    function updateTrackField(id, field, value) {
+      const idx = tracks.findIndex(t => t.id === id);
+      if (idx === -1) return;
+      pushUndo();
+      tracks[idx][field] = value;
+      saveState();
+      if (field === "link") {
+        renderTracks();
+      } else {
+        updateStats();
+      }
+    }
+
+    function updateTrackDuration(id, unit, rawVal) {
+      const idx = tracks.findIndex(t => t.id === id);
+      if (idx === -1) return;
+      pushUndo();
+      const cleaned = String(rawVal ?? "").trim();
+      if (!cleaned) {
+        tracks[idx][unit] = "";
+      } else {
+        let num = parseInt(cleaned, 10);
+        if (!Number.isFinite(num) || num < 0) num = 0;
+        if (unit === "seconds" && num > 59) {
+          const extraMins = Math.floor(num / 60);
+          num = num % 60;
+          const curMins = parseInt(tracks[idx].minutes, 10) || 0;
+          tracks[idx].minutes = String(curMins + extraMins);
+        }
+        tracks[idx][unit] = unit === "seconds" ? String(num).padStart(2, "0") : String(num);
+      }
+      saveState();
+      renderTracks();
+    }
+
+    function toggleFavorite(id) {
+      const track = tracks.find(t => t.id === id);
+      if (!track) return;
+      pushUndo();
+      track.favorite = !track.favorite;
+      saveState();
+      renderTracks();
+    }
+
+    function toggleTrackExtras(id) {
+      const track = tracks.find(t => t.id === id);
+      if (!track) return;
+      track.showExtras = !track.showExtras;
+      saveState();
+      renderTracks();
+    }
+
+    function duplicateTrack(id) {
+      const idx = tracks.findIndex(t => t.id === id);
+      if (idx === -1) return;
+      pushUndo();
+      const orig = tracks[idx];
+      const copy = {
+        ...JSON.parse(JSON.stringify(orig)),
+        id: "trk_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
+        title: orig.title ? `${orig.title} (Cópia)` : ""
+      };
+      tracks.splice(idx + 1, 0, copy);
+      tracks.forEach((t, i) => (t.order = i));
+      saveState();
+      renderTracks();
+      showToast("Faixa duplicada.", "success");
+    }
+
+    function clearTrackMetadata(id) {
+      const track = tracks.find(t => t.id === id);
+      if (!track) return;
+      pushUndo();
+      const preservedTitle = track.title;
+      const preservedOrder = track.order;
+      const preservedId = track.id;
+      Object.assign(track, createEmptyTrack(preservedTitle, preservedOrder), { id: preservedId });
+      saveState();
+      renderTracks();
+      showToast("Campos da faixa limpos.", "info");
+    }
+
+    function deleteTrack(id) {
+      const idx = tracks.findIndex(t => t.id === id);
+      if (idx === -1) return;
+      pushUndo();
+      tracks.splice(idx, 1);
+      tracks.forEach((t, i) => (t.order = i));
+      saveState();
+      renderTracks();
+      showToast("Faixa removida (Ctrl+Z para desfazer).", "info");
+    }
+
+    function moveTrack(id, delta) {
+      const ordered = [...tracks].sort((a, b) => a.order - b.order);
+      const idx = ordered.findIndex(t => t.id === id);
+      const targetIdx = idx + delta;
+      if (idx === -1 || targetIdx < 0 || targetIdx >= ordered.length) return;
+      pushUndo();
+      const [moved] = ordered.splice(idx, 1);
+      ordered.splice(targetIdx, 0, moved);
+      ordered.forEach((t, i) => (t.order = i));
+      tracks = ordered;
+      saveState();
+      renderTracks();
+    }
+
+    /* =========================================================================
+       BUSCA, ORDENAÇÃO E FILTROS
+       ========================================================================= */
+    function handleSearchInput(val) {
+      searchQuery = val || "";
+      const clearBtn = document.getElementById("clear-search-btn");
+      if (clearBtn) {
+        clearBtn.classList.toggle("hidden", !searchQuery.trim());
+      }
+      renderTracks();
+    }
+
+    function clearSearch() {
+      searchQuery = "";
+      const input = document.getElementById("search-input");
+      const clearBtn = document.getElementById("clear-search-btn");
+      if (input) input.value = "";
+      if (clearBtn) clearBtn.classList.add("hidden");
+      renderTracks();
+    }
+
+    function handleSortChange(val) {
+      sortBy = val;
+      renderTracks();
+    }
+
+    function toggleSortDirection() {
+      sortDir = sortDir === "asc" ? "desc" : "asc";
+      const label = document.getElementById("sort-dir-label");
+      if (label) {
+        label.textContent = sortDir === "asc" ? "↑ Crescente" : "↓ Decrescente";
+      }
+      renderTracks();
+    }
+
+    function handleQuickFilter(val) {
+      quickFilter = val;
+      renderTracks();
+    }
+
+    /* =========================================================================
+       SUGESTÃO INTELIGENTE PELO TÍTULO (VARINHA MÁGICA)
+       ========================================================================= */
+    function inferMetadataFromTitle(title, author = "") {
+      const text = `${title} ${author}`.toLowerCase();
+      const result = {
+        type: "",
+        style: "",
+        mood: "",
+        license: ""
+      };
+
+      // Tipo
+      if (/\b(remix|edit|bootleg|flip|mashup|sped up|slowed)\b/.test(text)) {
+        result.type = "Remix / Edit";
+      } else if (/\b(instrumental|karaoke|backing track)\b/.test(text)) {
+        result.type = "Instrumental";
+      } else if (/\b(ost|soundtrack|theme|boss|stage|game|nintendo|mario|zelda|animal crossing|undertale|persona)\b/.test(text)) {
+        result.type = "Trilha Sonora (OST)";
+      } else if (/\b(lofi|lo-fi|beat|type beat)\b/.test(text)) {
+        result.type = "Lo-Fi / Beat";
+      } else if (/\b(acapella|a capella)\b/.test(text)) {
+        result.type = "Acapella";
+      } else if (/\b(sfx|sound effect|efeito)\b/.test(text)) {
+        result.type = "Efeito Sonoro";
+      } else if (title.trim()) {
+        result.type = "Vocal";
+      }
+
+      // Estilo
+      if (/\b(lofi|lo-fi|chillhop|massobeats|study)\b/.test(text)) {
+        result.style = "Chillhop / Lo-Fi";
+      } else if (/\b(synthwave|retrowave|outrun|80s|blade runner|cyberpunk)\b/.test(text)) {
+        result.style = "Synthwave / Retrowave";
+      } else if (/\b(ost|soundtrack|mario|zelda|animal crossing|sonic|pokemon|undertale)\b/.test(text)) {
+        result.style = "Game OST";
+      } else if (/\b(jazz|soul|sax|amy winehouse|bossa)\b/.test(text)) {
+        result.style = "Soul / Jazz";
+      } else if (/\b(hip hop|hip-hop|rap|trap|tyler|kendrick|drake|kanye)\b/.test(text)) {
+        result.style = "Hip-Hop / Rap";
+      } else if (/\b(phonk|edm|house|techno|electronic|dubstep|dnb)\b/.test(text)) {
+        result.style = "Eletrônica / Phonk";
+      } else if (/\b(orchestral|classical|piano|violin|symphony|kevin macleod)\b/.test(text)) {
+        result.style = "Orquestral / Clássico";
+      } else if (/\b(pop|r&b|rnb)\b/.test(text)) {
+        result.style = "Pop / R&B";
+      }
+
+      // Vibe / Mood
+      if (/\b(sad|melanchol|cry|tears|temporary|alone|dark|bluebird)\b/.test(text)) {
+        result.mood = "Melancólico";
+      } else if (/\b(nostalg|memory|retro|80s|90s|childhood|1pm)\b/.test(text)) {
+        result.mood = "Nostálgico";
+      } else if (/\b(chill|relax|calm|sleep|study|honey|lofi|lo-fi)\b/.test(text)) {
+        result.mood = "Relaxante / Chill";
+      } else if (/\b(epic|cinematic|trailer|boss|battle)\b/.test(text)) {
+        result.mood = "Épico / Cinematográfico";
+      } else if (/\b(happy|sunny|upbeat|boom|dance|party|donk)\b/.test(text)) {
+        result.mood = "Alegre / Leve";
+      } else if (/\b(phonk|hype|energy|fast|workout)\b/.test(text)) {
+        result.mood = "Energético";
+      }
+
+      // Licença
+      if (/\b(kevin macleod|incompetech|no copyright|ncs|royalty free|creative commons|cc-by|massobeats)\b/.test(text)) {
+        result.license = "Creative Commons / Livre";
+      } else if (title.trim()) {
+        result.license = "Copyright / Comercial";
+      }
+
+      return result;
+    }
+
+    function autoDetectSingleTrack(id) {
+      const track = tracks.find(t => t.id === id);
+      if (!track || !track.title.trim()) {
+        showToast("Digite um título antes de usar a sugestão.", "warning");
+        return;
+      }
+      pushUndo();
+      const inferred = inferMetadataFromTitle(track.title);
+      let updated = 0;
+      ["type", "style", "mood", "license"].forEach(field => {
+        if (!String(track[field] || "").trim() && inferred[field]) {
+          track[field] = inferred[field];
+          updated++;
+        }
+      });
+      saveState();
+      renderTracks();
+      if (updated > 0) {
+        showToast(`${updated} campo(s) preenchido(s) pelo título!`, "success");
+      } else {
+        showToast("Nenhum campo vazio novo para sugerir nesta faixa.", "info");
+      }
+    }
+
+    function autoDetectAllFromTitles() {
+      if (tracks.length === 0) {
+        showToast("Adicione faixas primeiro.", "warning");
+        return;
+      }
+      pushUndo();
+      let totalFields = 0;
+      tracks.forEach(track => {
+        if (!track.title.trim()) return;
+        const inferred = inferMetadataFromTitle(track.title);
+        ["type", "style", "mood", "license"].forEach(field => {
+          if (!String(track[field] || "").trim() && inferred[field]) {
+            track[field] = inferred[field];
+            totalFields++;
+          }
+        });
+      });
+      saveState();
+      renderTracks();
+      showToast(`${totalFields} campo(s) vazio(s) preenchido(s) automaticamente!`, "success");
+    }
+
+    /* =========================================================================
+       YOUTUBE: EXTRAÇÃO DE ID, METADADOS E DURAÇÃO SEM ERROS DE CORS/POSTMESSAGE
+       ========================================================================= */
+    function extractYoutubeVideoId(url) {
+      if (!url) return null;
+      const str = String(url).trim();
+      const patterns = [
+        /(?:youtube\.com\/watch\?.*v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/shorts\/|music\.youtube\.com\/watch\?.*v=)([a-zA-Z0-9_-]{11})/,
+        /^([a-zA-Z0-9_-]{11})$/
+      ];
+      for (const rx of patterns) {
+        const match = str.match(rx);
+        if (match && match[1]) return match[1];
+      }
+      return null;
+    }
+
+    function extractYoutubeStartTime(url) {
+      if (!url) return "";
+      const match = String(url).match(/[?&#](?:t|start)=([0-9hms]+)/i);
+      if (!match) return "";
+      const raw = match[1];
+      if (/^\d+$/.test(raw)) {
+        return secondsToMMSS(parseInt(raw, 10));
+      }
+      const h = (raw.match(/(\d+)h/i) || [])[1] || 0;
+      const m = (raw.match(/(\d+)m/i) || [])[1] || 0;
+      const s = (raw.match(/(\d+)s/i) || [])[1] || 0;
+      const total = parseInt(h, 10) * 3600 + parseInt(m, 10) * 60 + parseInt(s, 10);
+      return total > 0 ? secondsToMMSS(total) : "";
+    }
+
+    function ensureYoutubeIframeApi() {
+      return new Promise(resolve => {
+        if (window.YT && window.YT.Player) {
+          ytApiReady = true;
+          resolve(true);
+          return;
+        }
+        const existing = document.getElementById("yt-iframe-api-script");
+        if (!existing) {
+          const tag = document.createElement("script");
+          tag.id = "yt-iframe-api-script";
+          tag.src = "https://www.youtube.com/iframe_api";
+          document.head.appendChild(tag);
+        }
+        const prevReady = window.onYouTubeIframeAPIReady;
+        window.onYouTubeIframeAPIReady = function () {
+          ytApiReady = true;
+          if (typeof prevReady === "function") prevReady();
+          resolve(true);
+        };
+        setTimeout(() => resolve(Boolean(window.YT && window.YT.Player)), 3500);
+      });
+    }
+
+    function probeYoutubeDurationViaPlayer(videoId) {
+      return new Promise(async resolve => {
+        const apiLoaded = await ensureYoutubeIframeApi();
+        if (!apiLoaded || !window.YT || !window.YT.Player) {
+          resolve(0);
+          return;
+        }
+
+        const host = document.createElement("div");
+        host.style.cssText = "position:fixed;left:-9999px;top:-9999px;width:160px;height:90px;opacity:0;pointer-events:none;";
+        const mount = document.createElement("div");
+        host.appendChild(mount);
+        document.body.appendChild(host);
+
+        let done = false;
+        let player = null;
+        const finish = secs => {
+          if (done) return;
+          done = true;
+          try {
+            if (player && typeof player.destroy === "function") player.destroy();
+          } catch (e) {}
+          host.remove();
+          resolve(secs > 0 ? Math.round(secs) : 0);
+        };
+
+        const timeout = setTimeout(() => finish(0), 5000);
+
+        const playerVars = {
+          autoplay: 0,
+          controls: 0,
+          mute: 1,
+          playsinline: 1
+        };
+        if (window.location.protocol === "http:" || window.location.protocol === "https:") {
+          playerVars.origin = window.location.origin;
+        }
+
+        try {
+          player = new window.YT.Player(mount, {
+            videoId,
+            playerVars,
+            events: {
+              onReady: ev => {
+                try {
+                  const d = ev.target.getDuration();
+                  if (d && d > 0) {
+                    clearTimeout(timeout);
+                    finish(d);
+                  }
+                } catch (e) {}
+              },
+              onError: () => {
+                clearTimeout(timeout);
+                finish(0);
+              }
+            }
+          });
+        } catch (err) {
+          clearTimeout(timeout);
+          finish(0);
+        }
+      });
+    }
+
+    async function fetchYoutubeDurationFromHtmlProxy(videoId) {
+      const targetUrl = `https://www.youtube.com/watch?v=${videoId}`;
+      const endpoints = [
+        async () => {
+          const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`);
+          if (!res.ok) return 0;
+          const data = await res.json();
+          const html = data && data.contents ? data.contents : "";
+          const m = html.match(/"lengthSeconds":"(\d+)"/);
+          return m ? parseInt(m[1], 10) : 0;
+        },
+        async () => {
+          const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`);
+          if (!res.ok) return 0;
+          const html = await res.text();
+          const m = html.match(/"lengthSeconds":"(\d+)"/);
+          return m ? parseInt(m[1], 10) : 0;
+        }
+      ];
+
+      for (const fn of endpoints) {
+        try {
+          const secs = await fn();
+          if (secs > 0) return secs;
+        } catch (e) {
+          // Tenta próximo endpoint
+        }
+      }
+      return 0;
+    }
+
+    async function fetchYoutubeMetadata(url) {
+      const videoId = extractYoutubeVideoId(url);
+      if (!videoId) return null;
+
+      const cleanUrl = `https://www.youtube.com/watch?v=${videoId}`;
+      const cue = extractYoutubeStartTime(url);
+      let title = "";
+      let author = "";
+
+      try {
+        const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(cleanUrl)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.title) title = data.title.trim();
+          if (data && data.author_name) author = data.author_name.trim();
+        }
+      } catch (e) {
+        // Fallback silencioso
+      }
+
+      // Limpa sufixos comuns de YouTube no título
+      const cleanedTitle = title
+        .replace(/\s*\((Official\s*(Music\s*)?Video|Official\s*Audio|Lyrics?|Visualizer|HD|4K)\)/gi, "")
+        .replace(/\s*\[(Official\s*(Music\s*)?Video|Official\s*Audio|Lyrics?|Visualizer|HD|4K)\]/gi, "")
+        .trim();
+
+      let durationSeconds = await fetchYoutubeDurationFromHtmlProxy(videoId);
+      if (!durationSeconds) {
+        durationSeconds = await probeYoutubeDurationViaPlayer(videoId);
+      }
+
+      const inferred = inferMetadataFromTitle(cleanedTitle || title, author);
+
+      return {
+        videoId,
+        link: cleanUrl,
+        title: cleanedTitle || title || `YouTube (${videoId})`,
+        author,
+        durationSeconds,
+        cue,
+        ...inferred
+      };
+    }
+
+    function normalizeTitleForMatch(str) {
+      return String(str || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9\s]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function findMatchingTrack(meta) {
+      // 1. Correspondência exata pelo ID do vídeo no link
+      const byId = tracks.find(t => extractYoutubeVideoId(t.link) === meta.videoId);
+      if (byId) return byId;
+
+      // 2. Correspondência por similaridade de título
+      const normMeta = normalizeTitleForMatch(meta.title);
+      if (!normMeta) return null;
+
+      return (
+        tracks.find(t => {
+          const normTrack = normalizeTitleForMatch(t.title);
+          if (!normTrack) return false;
+          return normTrack === normMeta || normTrack.includes(normMeta) || normMeta.includes(normTrack);
+        }) || null
+      );
+    }
+
+    function applyYoutubeMetaToTrack(track, meta) {
+      if (!String(track.title || "").trim() && meta.title) track.title = meta.title;
+      if (!String(track.link || "").trim() && meta.link) track.link = meta.link;
+
+      if (meta.durationSeconds > 0 && getTrackDurationSeconds(track) === 0) {
+        track.minutes = String(Math.floor(meta.durationSeconds / 60));
+        track.seconds = String(meta.durationSeconds % 60).padStart(2, "0");
+      }
+
+      if (!String(track.type || "").trim() && meta.type) track.type = meta.type;
+      if (!String(track.style || "").trim() && meta.style) track.style = meta.style;
+      if (!String(track.mood || "").trim() && meta.mood) track.mood = meta.mood;
+      if (!String(track.license || "").trim() && meta.license) track.license = meta.license;
+      if (!String(track.cue || "").trim() && meta.cue) track.cue = meta.cue;
+      if (!String(track.info || "").trim() && meta.author) track.info = `Canal: ${meta.author}`;
+    }
+
+    function setYoutubeStatus(visible, text = "") {
+      const bar = document.getElementById("yt-status-bar");
+      const label = document.getElementById("yt-status-text");
+      if (!bar || !label) return;
+      bar.classList.toggle("hidden", !visible);
+      if (text) label.textContent = text;
+    }
+
+    function toggleYoutubeBatchMode() {
+      ytBatchMode = !ytBatchMode;
+      const singleBox = document.getElementById("yt-single-box");
+      const batchBox = document.getElementById("yt-batch-box");
+      const toggleBtn = document.getElementById("toggle-batch-yt-btn");
+      if (singleBox) singleBox.classList.toggle("hidden", ytBatchMode);
+      if (batchBox) batchBox.classList.toggle("hidden", !ytBatchMode);
+      if (toggleBtn) {
+        toggleBtn.textContent = ytBatchMode ? "Modo 1 Link" : "Modo Vários Links";
+      }
+    }
+
+    function handleYoutubePaste(event) {
+      const pasted = (event.clipboardData || window.clipboardData)?.getData("text") || "";
+      const lines = pasted
+        .split(/\r?\n/)
+        .map(l => l.trim())
+        .filter(Boolean);
+
+      if (lines.length > 1) {
+        event.preventDefault();
+        if (!ytBatchMode) toggleYoutubeBatchMode();
+        const ta = document.getElementById("yt-batch-textarea");
+        if (ta) {
+          ta.value = lines.join("\n");
+          processYoutubeBatchInput();
+        }
+        return;
+      }
+
+      if (extractYoutubeVideoId(pasted)) {
+        setTimeout(() => processYoutubeUrlInput(), 60);
+      }
+    }
+
+    async function processYoutubeUrlInput() {
+      const input = document.getElementById("yt-url-input");
+      const btn = document.getElementById("yt-fetch-btn");
+      const url = input ? input.value.trim() : "";
+
+      if (!url) {
+        showToast("Cole um link válido do YouTube.", "warning");
+        return;
+      }
+
+      const videoId = extractYoutubeVideoId(url);
+      if (!videoId) {
+        showToast("Link do YouTube não reconhecido.", "error");
+        return;
+      }
+
+      if (btn) btn.disabled = true;
+      setYoutubeStatus(true, "Buscando título, duração e metadados no YouTube...");
+
+      try {
+        const meta = await fetchYoutubeMetadata(url);
+        if (!meta) {
+          showToast("Não foi possível obter os dados deste vídeo.", "error");
+          return;
+        }
+
+        pushUndo();
+        const existing = findMatchingTrack(meta);
+        if (existing) {
+          applyYoutubeMetaToTrack(existing, meta);
+          saveState();
+          renderTracks();
+          showToast(`Faixa "${existing.title}" atualizada!`, "success");
+        } else {
+          const created = addNewTrack({}, false);
+          applyYoutubeMetaToTrack(created, meta);
+          saveState();
+          renderTracks();
+          showToast(`Nova faixa "${created.title}" adicionada!`, "success");
+        }
+
+        if (input) input.value = "";
+      } finally {
+        if (btn) btn.disabled = false;
+        setYoutubeStatus(false);
+      }
+    }
+
+    async function processYoutubeBatchInput() {
+      const ta = document.getElementById("yt-batch-textarea");
+      const btn = document.getElementById("yt-batch-submit-btn");
+      const raw = ta ? ta.value : "";
+
+      const urls = raw
+        .split(/\r?\n/)
+        .map(l => l.trim())
+        .filter(l => extractYoutubeVideoId(l));
+
+      if (urls.length === 0) {
+        showToast("Nenhum link válido do YouTube encontrado nas linhas.", "warning");
+        return;
+      }
+
+      if (btn) btn.disabled = true;
+      setYoutubeStatus(true, `Processando ${urls.length} link(s) do YouTube em paralelo...`);
+
+      try {
+        pushUndo();
+        const results = await Promise.all(urls.map(u => fetchYoutubeMetadata(u)));
+        let added = 0;
+        let updated = 0;
+
+        results.forEach(meta => {
+          if (!meta) return;
+          const existing = findMatchingTrack(meta);
+          if (existing) {
+            applyYoutubeMetaToTrack(existing, meta);
+            updated++;
+          } else {
+            const maxOrder = tracks.reduce((acc, t) => Math.max(acc, t.order || 0), -1);
+            const created = createEmptyTrack("", maxOrder + 1);
+            applyYoutubeMetaToTrack(created, meta);
+            tracks.push(created);
+            added++;
+          }
+        });
+
+        saveState();
+        renderTracks();
+        if (ta) ta.value = "";
+        showToast(`Concluído: ${added} adicionada(s), ${updated} atualizada(s)!`, "success");
+      } finally {
+        if (btn) btn.disabled = false;
+        setYoutubeStatus(false);
+      }
+    }
+
+    async function fillMissingDurationsFromLinks() {
+      const targets = tracks.filter(t => extractYoutubeVideoId(t.link) && getTrackDurationSeconds(t) === 0);
+      if (targets.length === 0) {
+        showToast("Nenhuma faixa com link do YouTube está sem tempo.", "info");
+        return;
+      }
+
+      const btn = document.getElementById("fill-missing-times-btn");
+      if (btn) btn.disabled = true;
+      setYoutubeStatus(true, `Buscando tempos de ${targets.length} faixa(s)...`);
+
+      try {
+        pushUndo();
+        let filled = 0;
+        await Promise.all(
+          targets.map(async track => {
+            const vid = extractYoutubeVideoId(track.link);
+            let secs = await fetchYoutubeDurationFromHtmlProxy(vid);
+            if (!secs) secs = await probeYoutubeDurationViaPlayer(vid);
+            if (secs > 0) {
+              track.minutes = String(Math.floor(secs / 60));
+              track.seconds = String(secs % 60).padStart(2, "0");
+              filled++;
+            }
+          })
+        );
+
+        saveState();
+        renderTracks();
+        showToast(
+          filled > 0
+            ? `${filled} duração(ões) preenchida(s) automaticamente!`
+            : "Não foi possível obter durações adicionais.",
+          filled > 0 ? "success" : "warning"
+        );
+      } finally {
+        if (btn) btn.disabled = false;
+        setYoutubeStatus(false);
+      }
+    }
+
+    /* =========================================================================
+       MINI-PLAYER FLUTUANTE DO YOUTUBE
+       ========================================================================= */
+    async function openMiniPlayer(trackId) {
+      const track = tracks.find(t => t.id === trackId);
+      if (!track) return;
+      const videoId = extractYoutubeVideoId(track.link);
+      if (!videoId) {
+        showToast("Esta faixa não possui um link válido do YouTube.", "warning");
+        return;
+      }
+
+      activeMiniPlayerTrackId = trackId;
+      const card = document.getElementById("yt-mini-player-card");
+      const titleEl = document.getElementById("mini-player-title");
+      if (card) card.classList.remove("hidden");
+      if (titleEl) titleEl.textContent = track.title || videoId;
+
+      renderTracks();
+
+      const apiLoaded = await ensureYoutubeIframeApi();
+      if (!apiLoaded || !window.YT || !window.YT.Player) {
+        const mount = document.getElementById("yt-mini-player-mount");
+        if (mount) {
+          mount.innerHTML = `<iframe class="w-full h-full" src="https://www.youtube.com/embed/${videoId}?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+        }
+        return;
+      }
+
+      if (miniPlayerInstance && typeof miniPlayerInstance.loadVideoById === "function") {
+        miniPlayerInstance.loadVideoById(videoId);
+        return;
+      }
+
+      const playerVars = { autoplay: 1, playsinline: 1 };
+      if (window.location.protocol === "http:" || window.location.protocol === "https:") {
+        playerVars.origin = window.location.origin;
+      }
+
+      miniPlayerInstance = new window.YT.Player("yt-mini-player-mount", {
+        videoId,
+        playerVars
+      });
+    }
+
+    function closeMiniPlayer() {
+      activeMiniPlayerTrackId = null;
+      const card = document.getElementById("yt-mini-player-card");
+      if (card) card.classList.add("hidden");
+      if (miniPlayerInstance && typeof miniPlayerInstance.stopVideo === "function") {
+        try {
+          miniPlayerInstance.stopVideo();
+        } catch (e) {}
+      }
+      renderTracks();
+    }
+
+    function capturePlayerTimeToTrack(mode) {
+      if (!activeMiniPlayerTrackId || !miniPlayerInstance) return;
+      const track = tracks.find(t => t.id === activeMiniPlayerTrackId);
+      if (!track) return;
+
+      try {
+        if (mode === "duration" && typeof miniPlayerInstance.getDuration === "function") {
+          const total = Math.round(miniPlayerInstance.getDuration() || 0);
+          if (total > 0) {
+            pushUndo();
+            track.minutes = String(Math.floor(total / 60));
+            track.seconds = String(total % 60).padStart(2, "0");
+            saveState();
+            renderTracks();
+            showToast(`Duração ${formatTrackDuration(track)} salva na faixa!`, "success");
+          }
+        } else if (mode === "cue" && typeof miniPlayerInstance.getCurrentTime === "function") {
+          const cur = Math.round(miniPlayerInstance.getCurrentTime() || 0);
+          const cueStr = secondsToMMSS(cur);
+          pushUndo();
+          track.cue = cueStr;
+          track.showExtras = true;
+          saveState();
+          renderTracks();
+          showToast(`Trecho (Cue) ${cueStr} marcado na faixa!`, "success");
+        }
+      } catch (e) {
+        showToast("Aguarde o player iniciar para capturar o tempo.", "warning");
+      }
+    }
+
+    /* =========================================================================
+       EDIÇÃO EM LOTE E COPIAR LINKS
+       ========================================================================= */
+    function openBatchEditModal() {
+      const modal = document.getElementById("batch-edit-modal");
+      if (modal) {
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+      }
+    }
+
+    function closeBatchEditModal() {
+      const modal = document.getElementById("batch-edit-modal");
+      if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      }
+    }
+
+    function applyBatchEdit() {
+      const typeVal = document.getElementById("batch-type")?.value.trim() || "";
+      const styleVal = document.getElementById("batch-style")?.value.trim() || "";
+      const moodVal = document.getElementById("batch-mood")?.value.trim() || "";
+      const statusVal = document.getElementById("batch-status")?.value.trim() || "";
+
+      if (!typeVal && !styleVal && !moodVal && !statusVal) {
+        showToast("Preencha ao menos um campo para aplicar.", "warning");
+        return;
+      }
+
+      pushUndo();
+      let changed = 0;
+      tracks.forEach(t => {
+        if (typeVal && !String(t.type || "").trim()) {
+          t.type = typeVal;
+          changed++;
+        }
+        if (styleVal && !String(t.style || "").trim()) {
+          t.style = styleVal;
+          changed++;
+        }
+        if (moodVal && !String(t.mood || "").trim()) {
+          t.mood = moodVal;
+          changed++;
+        }
+        if (statusVal && !String(t.status || "").trim()) {
+          t.status = statusVal;
+          changed++;
+        }
+      });
+
+      saveState();
+      renderTracks();
+      closeBatchEditModal();
+      showToast(`${changed} campo(s) vazio(s) preenchido(s) em lote!`, "success");
+    }
+
+    function copyAllSavedLinks() {
+      const links = tracks.map(t => String(t.link || "").trim()).filter(Boolean);
+      if (links.length === 0) {
+        showToast("Nenhum link salvo na lista.", "warning");
+        return;
+      }
+      copyTextToClipboard(links.join("\n"));
+      showToast(`${links.length} link(s) copiado(s) para a área de transferência!`, "success");
+    }
+
+    /* =========================================================================
+       IMPORTAÇÃO DE TEXTO OU ARQUIVO (.TXT, .MD, .CSV, .JSON)
+       ========================================================================= */
+    function openPasteTextModal() {
+      const modal = document.getElementById("paste-text-modal");
+      if (modal) {
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+      }
+    }
+
+    function closePasteTextModal() {
+      const modal = document.getElementById("paste-text-modal");
+      if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      }
+    }
+
+    function loadFileIntoPasteModal(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const ta = document.getElementById("paste-import-textarea");
+        if (ta) {
+          ta.value = String(e.target?.result || "");
+          updatePastePreviewStats();
+        }
+      };
+      reader.readAsText(file, "UTF-8");
+      event.target.value = "";
+    }
+
+    function importAnyTrackFile(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const content = String(e.target?.result || "");
+        const parsed = parseImportedText(content);
+        if (parsed.length === 0) {
+          showToast("Nenhuma faixa válida identificada no arquivo.", "error");
+          return;
+        }
+        applyParsedTracks(parsed, "fill-empty");
+      };
+      reader.readAsText(file, "UTF-8");
+      event.target.value = "";
+    }
+
+    function parseCsvLine(line) {
+      const result = [];
+      let current = "";
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"' && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else if (ch === '"') {
+          inQuotes = !inQuotes;
+        } else if ((ch === "," || ch === ";") && !inQuotes) {
+          result.push(current.trim());
+          current = "";
+        } else {
+          current += ch;
+        }
+      }
+      result.push(current.trim());
+      return result;
+    }
+
+    function parseDurationString(str) {
+      const m = String(str || "").match(/(\d+)\s*:\s*(\d{1,2})/);
+      if (!m) return { minutes: "", seconds: "" };
+      return {
+        minutes: String(parseInt(m[1], 10)),
+        seconds: String(parseInt(m[2], 10)).padStart(2, "0")
+      };
+    }
+
+    function parseImportedText(rawText) {
+      const text = String(rawText || "").trim();
+      if (!text) return [];
+
+      // 1. Tenta JSON
+      if (text.startsWith("{") || text.startsWith("[")) {
+        try {
+          const obj = JSON.parse(text);
+          const arr = Array.isArray(obj) ? obj : Array.isArray(obj.tracks) ? obj.tracks : [];
+          if (arr.length > 0) {
+            return arr
+              .filter(item => item && (item.title || item.titulo))
+              .map(item => {
+                const dur = parseDurationString(item.duration || item.tempo || "");
+                return {
+                  title: String(item.title || item.titulo || "").trim(),
+                  minutes: String(item.minutes ?? dur.minutes ?? "").trim(),
+                  seconds: String(item.seconds ?? dur.seconds ?? "").trim(),
+                  type: String(item.type || item.tipo || "").trim(),
+                  style: String(item.style || item.estilo || "").trim(),
+                  info: String(item.info || item.notas || "").trim(),
+                  bpm: String(item.bpm || "").trim(),
+                  mood: String(item.mood || item.vibe || "").trim(),
+                  cue: String(item.cue || item.trecho || "").trim(),
+                  energy: String(item.energy || item.energia || "").trim(),
+                  license: String(item.license || item.licenca || "").trim(),
+                  link: String(item.link || item.url || "").trim(),
+                  status: String(item.status || "").trim(),
+                  favorite: Boolean(item.favorite || item.favorita)
+                };
+              });
+          }
+        } catch (e) {
+          // Segue para outros formatos
+        }
+      }
+
+      const lines = text.split(/\r?\n/);
+
+      // 2. Tenta CSV
+      const firstNonEmpty = lines.find(l => l.trim()) || "";
+      if (/t[íi]tulo|title/i.test(firstNonEmpty) && (firstNonEmpty.includes(",") || firstNonEmpty.includes(";"))) {
+        const headers = parseCsvLine(firstNonEmpty).map(h => h.toLowerCase());
+        const items = [];
+        for (let i = lines.indexOf(firstNonEmpty) + 1; i < lines.length; i++) {
+          if (!lines[i].trim()) continue;
+          const cols = parseCsvLine(lines[i]);
+          const getCol = keys => {
+            const idx = headers.findIndex(h => keys.some(k => h.includes(k)));
+            return idx >= 0 ? cols[idx] || "" : "";
+          };
+          const title = getCol(["título", "titulo", "title", "música", "musica"]);
+          if (!title) continue;
+          const dur = parseDurationString(getCol(["tempo", "duração", "duration"]));
+          items.push({
+            title,
+            minutes: dur.minutes,
+            seconds: dur.seconds,
+            type: getCol(["tipo", "type"]),
+            style: getCol(["estilo", "style"]),
+            info: getCol(["info", "notas"]),
+            bpm: getCol(["bpm"]),
+            mood: getCol(["vibe", "mood"]),
+            cue: getCol(["cue", "trecho"]),
+            energy: getCol(["energia", "energy"]),
+            license: getCol(["licença", "licenca", "license"]),
+            link: getCol(["link", "url"]),
+            status: getCol(["status"]),
+            favorite: /sim|true|★|1/i.test(getCol(["favorit"]))
+          });
+        }
+        if (items.length > 0) return items;
+      }
+
+      // 3. Formato Estruturado (.TXT ou .MD gerado pelo TrackSheet) ou Lista Simples
+      const parsedTracks = [];
+      let current = null;
+
+      for (const rawLine of lines) {
+        const line = rawLine.trim();
+        if (!line || /^===|^---|^TrackSheet|^Total de/i.test(line)) continue;
+
+        const numberedMatch = line.match(/^(?:###\s*)?\d+\.\s*(★\s*)?(.+)$/);
+        if (numberedMatch) {
+          if (current && current.title) parsedTracks.push(current);
+          current = {
+            title: numberedMatch[2].replace(/\*\*/g, "").trim(),
+            minutes: "",
+            seconds: "",
+            type: "",
+            style: "",
+            info: "",
+            bpm: "",
+            mood: "",
+            cue: "",
+            energy: "",
+            license: "",
+            link: "",
+            status: "",
+            favorite: Boolean(numberedMatch[1])
+          };
+          continue;
+        }
+
+        const kvMatch = line.replace(/^[-*]\s*/, "").replace(/\*\*/g, "").match(/^([^:]+):\s*(.*)$/);
+        if (current && kvMatch) {
+          const key = kvMatch[1].trim().toLowerCase();
+          const val = kvMatch[2].trim();
+          if (!val) continue;
+          if (key.includes("tempo") || key.includes("dura")) {
+            const dur = parseDurationString(val);
+            current.minutes = dur.minutes;
+            current.seconds = dur.seconds;
+          } else if (key === "tipo") {
+            current.type = val;
+          } else if (key === "estilo") {
+            current.style = val;
+          } else if (key.includes("info") || key.includes("nota")) {
+            current.info = val;
+          } else if (key === "bpm") {
+            current.bpm = val;
+          } else if (key.includes("vibe") || key.includes("mood")) {
+            current.mood = val;
+          } else if (key.includes("trecho") || key.includes("cue")) {
+            current.cue = val;
+          } else if (key.includes("energia")) {
+            current.energy = val.replace(/[^1-5]/g, "");
+          } else if (key.includes("licen")) {
+            current.license = val;
+          } else if (key === "link" || key === "url") {
+            current.link = val;
+          } else if (key === "status") {
+            current.status = val;
+          }
+          continue;
+        }
+
+        // Linha simples de nome de música
+        if (!current) {
+          parsedTracks.push({
+            title: line,
+            minutes: "",
+            seconds: "",
+            type: "",
+            style: "",
+            info: "",
+            bpm: "",
+            mood: "",
+            cue: "",
+            energy: "",
+            license: "",
+            link: "",
+            status: "",
+            favorite: false
+          });
+        }
+      }
+
+      if (current && current.title) parsedTracks.push(current);
+      return parsedTracks;
+    }
+
+    function updatePastePreviewStats() {
+      const ta = document.getElementById("paste-import-textarea");
+      const badge = document.getElementById("paste-detected-badge");
+      if (!ta || !badge) return;
+      const items = parseImportedText(ta.value);
+      badge.textContent = items.length > 0 ? `${items.length} faixa(s) detectada(s)` : "Nenhuma faixa detectada";
+    }
+
+    function applyParsedTracks(parsedList, mode = "fill-empty") {
+      pushUndo();
+      let updated = 0;
+      let created = 0;
+
+      parsedList.forEach(item => {
+        const norm = normalizeTitleForMatch(item.title);
+        const existing = tracks.find(t => normalizeTitleForMatch(t.title) === norm);
+
+        if (existing) {
+          const fields = ["minutes", "seconds", "type", "style", "info", "bpm", "mood", "cue", "energy", "license", "link", "status"];
+          fields.forEach(f => {
+            if (!item[f]) return;
+            if (mode === "overwrite" || !String(existing[f] || "").trim()) {
+              existing[f] = item[f];
+            }
+          });
+          if (item.favorite) existing.favorite = true;
+          updated++;
+        } else {
+          const maxOrder = tracks.reduce((acc, t) => Math.max(acc, t.order || 0), -1);
+          tracks.push({
+            ...createEmptyTrack(item.title, maxOrder + 1),
+            ...item
+          });
+          created++;
+        }
+      });
+
+      saveState();
+      renderTracks();
+      showToast(`Importado: ${created} nova(s), ${updated} atualizada(s)!`, "success");
+    }
+
+    function confirmPasteTextImport() {
+      const ta = document.getElementById("paste-import-textarea");
+      const mode = document.querySelector('input[name="paste-import-mode"]:checked')?.value || "fill-empty";
+      const parsed = parseImportedText(ta ? ta.value : "");
+      if (parsed.length === 0) {
+        showToast("Cole um texto válido com músicas antes de importar.", "warning");
+        return;
+      }
+      applyParsedTracks(parsed, mode);
+      if (ta) ta.value = "";
+      closePasteTextModal();
+    }
+
+    /* =========================================================================
+       LIMPAR LISTA (RESET MODAL)
+       ========================================================================= */
+    function openResetModal() {
+      const modal = document.getElementById("reset-modal");
+      if (modal) {
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+      }
+    }
+
+    function closeResetModal() {
+      const modal = document.getElementById("reset-modal");
+      if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      }
+    }
+
+    function confirmResetTracks() {
+      pushUndo();
+      tracks = [];
+      saveState();
+      renderTracks();
+      closeResetModal();
+      showToast("Lista limpa com sucesso (Ctrl+Z para desfazer).", "info");
+    }
+
+    /* =========================================================================
+       GERAÇÃO E EXPORTAÇÃO DE ARQUIVO (.TXT, .MD, .CSV, .JSON)
+       ========================================================================= */
+    function openGenerateModal() {
+      const modal = document.getElementById("generate-modal");
+      if (modal) {
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+        refreshExportPreview();
+      }
+    }
+
+    function closeGenerateModal() {
+      const modal = document.getElementById("generate-modal");
+      if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      }
+    }
+
+    function setExportFormat(fmt) {
+      exportFormat = fmt;
+      document.querySelectorAll(".fmt-btn").forEach(btn => {
+        btn.className = "fmt-btn py-1.5 rounded-lg font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition cursor-pointer";
+      });
+      const activeBtn = document.getElementById(`fmt-btn-${fmt}`);
+      if (activeBtn) {
+        activeBtn.className = "fmt-btn py-1.5 rounded-lg font-semibold bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm transition cursor-pointer";
+      }
+      refreshExportPreview();
+    }
+
+    function generateExportContent() {
+      const includeExtras = Boolean(document.getElementById("export-include-extras")?.checked);
+      const includeHeader = Boolean(document.getElementById("export-include-header")?.checked);
+      const list = getFilteredAndSortedTracks();
+      const totalSecs = list.reduce((acc, t) => acc + getTrackDurationSeconds(t), 0);
+
+      if (exportFormat === "json") {
+        const payload = list.map((t, idx) => {
+          const item = {
+            numero: idx + 1,
+            titulo: t.title || "",
+            tempo: formatTrackDuration(t),
+            tipo: t.type || "",
+            estilo: t.style || "",
+            info: t.info || ""
+          };
+          if (includeExtras) {
+            item.favorita = Boolean(t.favorite);
+            item.bpm = t.bpm || "";
+            item.vibe = t.mood || "";
+            item.trecho_cue = t.cue || "";
+            item.energia = t.energy || "";
+            item.licenca = t.license || "";
+            item.status = t.status || "";
+            item.link = t.link || "";
+          }
+          return item;
+        });
+        return JSON.stringify(
+          includeHeader
+            ? {
+                total_faixas: list.length,
+                tempo_total: formatTotalSeconds(totalSecs),
+                faixas: payload
+              }
+            : payload,
+          null,
+          2
+        );
+      }
+
+      if (exportFormat === "csv") {
+        const baseHeaders = ["#", "Título", "Tempo", "Tipo", "Estilo", "+Info"];
+        const extraHeaders = includeExtras
+          ? ["Favorita", "BPM", "Vibe", "Trecho (Cue)", "Energia", "Licença", "Status", "Link"]
+          : [];
+        const headers = [...baseHeaders, ...extraHeaders];
+        const escapeCsv = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+
+        const rows = [headers.map(escapeCsv).join(",")];
+        list.forEach((t, idx) => {
+          const baseCols = [
+            idx + 1,
+            t.title || "",
+            formatTrackDuration(t),
+            t.type || "",
+            t.style || "",
+            t.info || ""
+          ];
+          const extraCols = includeExtras
+            ? [
+                t.favorite ? "Sim" : "",
+                t.bpm || "",
+                t.mood || "",
+                t.cue || "",
+                t.energy || "",
+                t.license || "",
+                t.status || "",
+                t.link || ""
+              ]
+            : [];
+          rows.push([...baseCols, ...extraCols].map(escapeCsv).join(","));
+        });
+        return rows.join("\n");
+      }
+
+      if (exportFormat === "md") {
+        const out = [];
+        if (includeHeader) {
+          out.push("# Lista de Músicas — TrackSheet Studio");
+          out.push(`- **Total de faixas:** ${list.length}`);
+          out.push(`- **Duração total:** ${formatTotalSeconds(totalSecs)}`);
+          out.push("");
+        }
+
+        list.forEach((t, idx) => {
+          const star = t.favorite ? "★ " : "";
+          out.push(`### ${idx + 1}. ${star}${t.title || "(Sem título)"}`);
+          out.push(`- **Tempo:** ${formatTrackDuration(t)}`);
+          out.push(`- **Tipo:** ${t.type || ""}`);
+          out.push(`- **Estilo:** ${t.style || ""}`);
+          out.push(`- **+Info:** ${t.info || ""}`);
+          if (includeExtras) {
+            out.push(`- **BPM:** ${t.bpm || ""}`);
+            out.push(`- **Vibe:** ${t.mood || ""}`);
+            out.push(`- **Trecho (Cue):** ${t.cue || ""}`);
+            out.push(`- **Energia:** ${t.energy || ""}`);
+            out.push(`- **Licença:** ${t.license || ""}`);
+            out.push(`- **Status:** ${t.status || ""}`);
+            out.push(`- **Link:** ${t.link || ""}`);
+          }
+          out.push("");
+        });
+        return out.join("\n").trim();
+      }
+
+      // Formato padrão: .TXT
+      const lines = [];
+      if (includeHeader) {
+        lines.push("========================================");
+        lines.push("LISTA DE MÚSICAS — TRACKSHEET STUDIO");
+        lines.push(`Total de faixas: ${list.length} | Tempo total: ${formatTotalSeconds(totalSecs)}`);
+        lines.push("========================================");
+        lines.push("");
+      }
+
+      list.forEach((t, idx) => {
+        const star = t.favorite ? "★ " : "";
+        lines.push(`${idx + 1}. ${star}${t.title || ""}`);
+        lines.push(`   Tempo: ${formatTrackDuration(t)}`);
+        lines.push(`   Tipo: ${t.type || ""}`);
+        lines.push(`   Estilo: ${t.style || ""}`);
+        lines.push(`   +Info: ${t.info || ""}`);
+        if (includeExtras) {
+          lines.push(`   BPM: ${t.bpm || ""}`);
+          lines.push(`   Vibe: ${t.mood || ""}`);
+          lines.push(`   Trecho (Cue): ${t.cue || ""}`);
+          lines.push(`   Energia: ${t.energy || ""}`);
+          lines.push(`   Licença: ${t.license || ""}`);
+          lines.push(`   Status: ${t.status || ""}`);
+          lines.push(`   Link: ${t.link || ""}`);
+        }
+        lines.push("");
+      });
+
+      return lines.join("\n").trim();
+    }
+
+    function refreshExportPreview() {
+      const ta = document.getElementById("export-preview-textarea");
+      const countEl = document.getElementById("export-char-count");
+      const content = generateExportContent();
+      if (ta) ta.value = content;
+      if (countEl) countEl.textContent = `${content.length} caracteres`;
+    }
+
+    function copyExportText() {
+      const content = generateExportContent();
+      copyTextToClipboard(content);
+      showToast("Conteúdo copiado para a área de transferência!", "success");
+    }
+
+    function downloadGeneratedFile() {
+      const content = generateExportContent();
+      const rawName = document.getElementById("export-filename")?.value.trim() || "lista-musicas";
+      const safeName = rawName.replace(/[^a-zA-Z0-9_-]/g, "_");
+      const filename = `${safeName}.${exportFormat}`;
+
+      const mimeMap = {
+        txt: "text/plain;charset=utf-8",
+        md: "text/markdown;charset=utf-8",
+        csv: "text/csv;charset=utf-8",
+        json: "application/json;charset=utf-8"
+      };
+
+      const blob = new Blob([content], { type: mimeMap[exportFormat] || "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      showToast(`Arquivo "${filename}" baixado!`, "success");
+    }
+
+    /* =========================================================================
+       ASSISTENTE GEMINI AI
+       ========================================================================= */
+    function openAiHubModal() {
+      const modal = document.getElementById("ai-hub-modal");
+      if (modal) {
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+      }
+    }
+
+    function closeAiHubModal() {
+      const modal = document.getElementById("ai-hub-modal");
+      if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      }
+    }
+
+    function setAiProgress(visible, text = "") {
+      const bar = document.getElementById("ai-progress-bar");
+      const label = document.getElementById("ai-progress-text");
+      if (bar) bar.classList.toggle("hidden", !visible);
+      if (label && text) label.textContent = text;
+    }
+
+    async function callGeminiApiForTracks(targetTracks) {
+      if (!GEMINI_API_KEY || !GEMINI_API_KEY.trim()) {
+        // Fallback inteligente local quando GEMINI_API_KEY está em branco
+        return targetTracks.map(t => {
+          const inferred = inferMetadataFromTitle(t.title);
+          return {
+            id: t.id,
+            title: t.title,
+            suggestions: {
+              minutes: t.minutes || "",
+              seconds: t.seconds || "",
+              type: inferred.type || "Vocal",
+              style: inferred.style || "Pop / R&B",
+              bpm: t.bpm || "",
+              mood: inferred.mood || "Relaxante / Chill",
+              energy: t.energy || "3",
+              license: inferred.license || "Copyright / Comercial",
+              info: t.info || "Sugestão local (preencha GEMINI_API_KEY no código para análise completa com IA)"
+            },
+            notes: "Configure GEMINI_API_KEY no topo do <script> para obter BPM real, duração exata e revisão profunda com Gemini."
+          };
+        });
+      }
+
+      const promptPayload = targetTracks.map(t => ({
+        id: t.id,
+        title: t.title,
+        current: {
+          minutes: t.minutes,
+          seconds: t.seconds,
+          type: t.type,
+          style: t.style,
+          bpm: t.bpm,
+          mood: t.mood,
+          energy: t.energy,
+          license: t.license,
+          info: t.info
+        }
+      }));
+
+      const systemPrompt = `Você é um especialista em catalogação musical e direitos autorais.
+Analise cada faixa enviada no JSON e retorne EXCLUSIVAMENTE um JSON válido no formato:
+{
+  "results": [
+    {
+      "id": "id_da_faixa",
+      "suggestions": {
+        "minutes": "3",
+        "seconds": "45",
+        "type": "Vocal | Instrumental | Trilha Sonora (OST) | Lo-Fi / Beat | Remix / Edit",
+        "style": "Gênero musical preciso",
+        "bpm": "110",
+        "mood": "Melancólico | Nostálgico | Relaxante / Chill | Energético | Épico / Cinematográfico | Sombrio / Tenso | Alegre / Leve",
+        "energy": "1 a 5",
+        "license": "Copyright / Comercial | Creative Commons / Livre | Domínio Público",
+        "info": "Breve informação útil sobre artista, álbum, jogo ou uso"
+      },
+      "notes": "Indique se algum campo já preenchido merece correção ou deixe vazio se estiver ótimo"
+    }
+  ]
+}`;
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(GEMINI_API_KEY.trim())}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [
+              {
+                role: "user",
+                parts: [{ text: `${systemPrompt}\n\nFaixas:\n${JSON.stringify(promptPayload)}` }]
+              }
+            ],
+            generationConfig: {
+              responseMimeType: "application/json"
+            }
+          })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Erro HTTP ${response.status} na API Gemini`);
+      }
+
+      const data = await response.json();
+      const rawJson = data?.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+      const parsed = JSON.parse(rawJson);
+      return Array.isArray(parsed.results) ? parsed.results : [];
+    }
+
+    async function analyzeAllTracksWithGemini() {
+      if (tracks.length === 0) {
+        showToast("Adicione faixas antes de analisar com a IA.", "warning");
+        return;
+      }
+
+      const onlyIncomplete = Boolean(document.getElementById("ai-only-incomplete-chk")?.checked);
+      const targets = onlyIncomplete ? tracks.filter(t => isTrackMetadataEmpty(t) || !t.type || !t.style) : tracks;
+
+      if (targets.length === 0) {
+        showToast("Todas as faixas já possuem os campos principais preenchidos.", "info");
+        return;
+      }
+
+      const btn = document.getElementById("ai-run-all-btn");
+      if (btn) btn.disabled = true;
+      setAiProgress(true, `Analisando ${targets.length} faixa(s)...`);
+
+      try {
+        const results = await callGeminiApiForTracks(targets);
+        const autoFillEmpty = Boolean(document.getElementById("ai-auto-fill-empty-chk")?.checked);
+
+        if (autoFillEmpty && results.length > 0) {
+          pushUndo();
+        }
+
+        results.forEach(res => {
+          aiStoredResults[res.id] = res;
+          if (autoFillEmpty) {
+            const track = tracks.find(t => t.id === res.id);
+            if (track && res.suggestions) {
+              applySuggestionObjectToTrack(track, res.suggestions, false);
+            }
+          }
+        });
+
+        saveState();
+        renderTracks();
+        renderAiResults();
+        showToast("Análise concluída!", "success");
+      } catch (err) {
+        console.error(err);
+        showToast("Erro ao consultar Gemini AI. Verifique sua API Key.", "error");
+      } finally {
+        if (btn) btn.disabled = false;
+        setAiProgress(false);
+      }
+    }
+
+    async function analyzeSingleTrackWithGemini(trackId) {
+      const track = tracks.find(t => t.id === trackId);
+      if (!track) return;
+      openAiHubModal();
+      setAiProgress(true, `Analisando "${track.title || "faixa"}"...`);
+      try {
+        const results = await callGeminiApiForTracks([track]);
+        const autoFillEmpty = Boolean(document.getElementById("ai-auto-fill-empty-chk")?.checked);
+        if (results[0]) {
+          aiStoredResults[track.id] = results[0];
+          if (autoFillEmpty) {
+            pushUndo();
+            applySuggestionObjectToTrack(track, results[0].suggestions, false);
+            saveState();
+            renderTracks();
+          }
+        }
+        renderAiResults();
+      } catch (err) {
+        showToast("Falha ao analisar faixa com Gemini AI.", "error");
+      } finally {
+        setAiProgress(false);
+      }
+    }
+
+    function applySuggestionObjectToTrack(track, sug, overwrite = false) {
+      if (!sug) return;
+      const fields = ["minutes", "seconds", "type", "style", "bpm", "mood", "energy", "license", "info"];
+      fields.forEach(f => {
+        const val = String(sug[f] ?? "").trim();
+        if (!val) return;
+        if (overwrite || !String(track[f] || "").trim()) {
+          track[f] = f === "seconds" ? val.padStart(2, "0") : val;
+        }
+      });
+    }
+
+    function renderAiResults() {
+      const container = document.getElementById("ai-results-container");
+      const btnEmpty = document.getElementById("ai-apply-all-empty-btn");
+      const btnAll = document.getElementById("ai-apply-all-changes-btn");
+      const entries = Object.values(aiStoredResults);
+
+      if (!container) return;
+
+      if (entries.length === 0) {
+        if (btnEmpty) btnEmpty.classList.add("hidden");
+        if (btnAll) btnAll.classList.add("hidden");
+        return;
+      }
+
+      if (btnEmpty) btnEmpty.classList.remove("hidden");
+      if (btnAll) btnAll.classList.remove("hidden");
+
+      container.innerHTML = entries
+        .map(res => {
+          const track = tracks.find(t => t.id === res.id);
+          if (!track) return "";
+          const s = res.suggestions || {};
+          return `
+            <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <strong class="text-sm text-slate-900 dark:text-white">${escapeHtml(track.title || "(Sem título)")}</strong>
+                <div class="flex items-center gap-1.5">
+                  <button
+                    onclick="applySingleAiSuggestion('${track.id}', false)"
+                    class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold cursor-pointer"
+                  >
+                    Preencher Vazios
+                  </button>
+                  <button
+                    onclick="applySingleAiSuggestion('${track.id}', true)"
+                    class="px-2.5 py-1 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-semibold cursor-pointer"
+                  >
+                    Sobrescrever Tudo
+                  </button>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-slate-600 dark:text-slate-300">
+                <div><span class="text-slate-400">Tempo:</span> ${escapeHtml(s.minutes || "-")}:${escapeHtml(s.seconds || "-")}</div>
+                <div><span class="text-slate-400">Tipo:</span> ${escapeHtml(s.type || "-")}</div>
+                <div><span class="text-slate-400">Estilo:</span> ${escapeHtml(s.style || "-")}</div>
+                <div><span class="text-slate-400">BPM:</span> ${escapeHtml(s.bpm || "-")}</div>
+                <div><span class="text-slate-400">Vibe:</span> ${escapeHtml(s.mood || "-")}</div>
+                <div><span class="text-slate-400">Energia:</span> ${escapeHtml(s.energy || "-")}</div>
+                <div class="col-span-2"><span class="text-slate-400">Licença:</span> ${escapeHtml(s.license || "-")}</div>
+              </div>
+              ${s.info ? `<p class="text-[11px] text-slate-500 dark:text-slate-400"><strong>+Info:</strong> ${escapeHtml(s.info)}</p>` : ""}
+              ${res.notes ? `<p class="text-[11px] text-amber-600 dark:text-amber-400"><strong>Observação AI:</strong> ${escapeHtml(res.notes)}</p>` : ""}
+            </div>
+          `;
+        })
+        .join("");
+    }
+
+    function applySingleAiSuggestion(trackId, overwrite) {
+      const track = tracks.find(t => t.id === trackId);
+      const res = aiStoredResults[trackId];
+      if (!track || !res) return;
+      pushUndo();
+      applySuggestionObjectToTrack(track, res.suggestions, overwrite);
+      saveState();
+      renderTracks();
+      showToast("Sugestões aplicadas à faixa!", "success");
+    }
+
+    function applyAllAiStoredSuggestions(overwrite) {
+      const entries = Object.values(aiStoredResults);
+      if (entries.length === 0) return;
+      pushUndo();
+      entries.forEach(res => {
+        const track = tracks.find(t => t.id === res.id);
+        if (track) applySuggestionObjectToTrack(track, res.suggestions, overwrite);
+      });
+      saveState();
+      renderTracks();
+      showToast("Sugestões aplicadas a todas as faixas analisadas!", "success");
+    }
+
+    /* =========================================================================
+       AJUDA, CLIPBOARD E NOTIFICAÇÕES (TOAST)
+       ========================================================================= */
+    function openHelpModal() {
+      const modal = document.getElementById("help-modal");
+      if (modal) {
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+      }
+    }
+
+    function closeHelpModal() {
+      const modal = document.getElementById("help-modal");
+      if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      }
+    }
+
+    function copyTextToClipboard(text) {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand("copy");
+      } catch (e) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).catch(() => {});
+        }
+      }
+      ta.remove();
+    }
+
+    function showToast(message, type = "info") {
+      const container = document.getElementById("toast-container");
+      if (!container) return;
+
+      const colorMap = {
+        success: "bg-emerald-600 text-white border-emerald-500",
+        error: "bg-rose-600 text-white border-rose-500",
+        warning: "bg-amber-600 text-white border-amber-500",
+        info: "bg-slate-900 dark:bg-slate-800 text-white border-slate-700"
+      };
+
+      const toast = document.createElement("div");
+      toast.className = `pointer-events-auto px-4 py-3 rounded-xl border shadow-xl text-xs font-medium flex items-center justify-between gap-3 transition-all duration-200 ${
+        colorMap[type] || colorMap.info
+      }`;
+      toast.innerHTML = `
+        <span>${escapeHtml(message)}</span>
+        <button type="button" onclick="this.parentElement.remove()" class="opacity-75 hover:opacity-100 font-bold cursor-pointer">✕</button>
+      `;
+
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = "0";
+        setTimeout(() => toast.remove(), 220);
+      }, 3400);
+    }
+
+    /* =========================================================================
+       ATALHOS DE TECLADO E INICIALIZAÇÃO
+       ========================================================================= */
+    document.addEventListener("keydown", e => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+        const activeTag = document.activeElement?.tagName;
+        if (activeTag !== "INPUT" && activeTag !== "TEXTAREA") {
+          e.preventDefault();
+          undoLastAction();
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        openGenerateModal();
+      } else if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault();
+        addNewTrack();
+      } else if (e.key === "Escape") {
+        closeGenerateModal();
+        closePasteTextModal();
+        closeResetModal();
+        closeBatchEditModal();
+        closeHelpModal();
+        closeAiHubModal();
+      }
+    });
+
+    window.addEventListener("DOMContentLoaded", () => {
+      loadState();
+      renderTracks();
+      updateUndoButtons();
+    });
+  </script>
+</body>
+</html>
