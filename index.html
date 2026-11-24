@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎵</text></svg>" />
   <title>TrackSheet Studio — Organizador de Faixas & Gerador de Arquivo</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -2182,91 +2183,106 @@
       if (textEl && text) textEl.textContent = text;
     }
 
+    async function fetchWithTimeout(url, options = {}, timeoutMs = 2800) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        return await fetch(url, { ...options, signal: controller.signal });
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    async function fetchDurationViaGeminiFallback(cleanTitle, author = "") {
+      if (!isGeminiKeyConfigured() || !cleanTitle) return 0;
+      try {
+        const prompt = `Informe apenas a duração oficial em minutos e segundos da música "${cleanTitle}"${author ? ` (canal/artista: ${author})` : ""}. Responda somente JSON válido no formato {"minutes": 3, "seconds": 45}. Se não tiver certeza, retorne {"minutes": 0, "seconds": 0}.`;
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+        const res = await fetchWithTimeout(
+          endpoint,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { responseMimeType: "application/json", temperature: 0.1 }
+            })
+          },
+          4000
+        );
+        if (!res.ok) return 0;
+        const data = await res.json();
+        const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+        const parsed = JSON.parse(raw);
+        const mins = parseInt(parsed.minutes, 10) || 0;
+        const secs = parseInt(parsed.seconds, 10) || 0;
+        return mins * 60 + secs;
+      } catch (e) {
+        return 0;
+      }
+    }
+
     async function fetchYoutubeMetadata(videoId) {
       const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
       let title = "";
       let author = "";
       let durationSeconds = 0;
 
-      // 1. oEmbed oficial (título + canal)
-      try {
-        const oembedRes = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(watchUrl)}&format=json`);
-        if (oembedRes.ok) {
-          const data = await oembedRes.json();
-          title = data.title || "";
-          author = data.author_name || "";
-        }
-      } catch (e) {
-        // Continua para fallbacks
-      }
-
-      // 2. Duração via AllOrigins (parse de lengthSeconds do HTML)
-      if (!durationSeconds) {
-        try {
-          const aoRes = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(watchUrl)}`);
-          if (aoRes.ok) {
-            const aoData = await aoRes.json();
-            const html = aoData.contents || "";
-            const lenMatch = html.match(/"lengthSeconds":"(\d+)"/);
-            if (lenMatch && lenMatch[1]) {
-              durationSeconds = parseInt(lenMatch[1], 10);
-            }
-            if (!title) {
-              const titleMatch = html.match(/<title>(.*?) - YouTube<\/title>/);
-              if (titleMatch && titleMatch[1]) title = titleMatch[1];
-            }
-          }
-        } catch (e) {
-          // Continua para fallback
-        }
-      }
-
-      // 3. Fallback CodeTabs Proxy
-      if (!durationSeconds) {
-        try {
-          const ctRes = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(watchUrl)}`);
-          if (ctRes.ok) {
-            const html = await ctRes.text();
-            const lenMatch = html.match(/"lengthSeconds":"(\d+)"/);
-            if (lenMatch && lenMatch[1]) {
-              durationSeconds = parseInt(lenMatch[1], 10);
-            }
-          }
-        } catch (e) {
-          // Continua para Piped
-        }
-      }
-
-      // 4. Fallback Piped API
-      if (!durationSeconds) {
-        const pipedHosts = ["https://pipedapi.kavin.rocks", "https://pipedapi.tokhmi.xyz"];
-        for (const host of pipedHosts) {
+      // 1. Executa em paralelo: oEmbed oficial (CORS nativo) + Sonda do Player oficial
+      const [oembedResult, iframeDuration] = await Promise.all([
+        (async () => {
           try {
-            const pRes = await fetch(`${host}/streams/${videoId}`);
-            if (pRes.ok) {
-              const pData = await pRes.json();
-              if (pData.duration && pData.duration > 0) {
-                durationSeconds = Math.round(pData.duration);
-              }
-              if (!title && pData.title) title = pData.title;
-              if (!author && pData.uploader) author = pData.uploader;
-              if (durationSeconds) break;
-            }
-          } catch (e) {
-            // Próximo host
-          }
-        }
+            const res = await fetchWithTimeout(
+              `https://www.youtube.com/oembed?url=${encodeURIComponent(watchUrl)}&format=json`,
+              {},
+              3000
+            );
+            if (res.ok) return await res.json();
+          } catch (e) {}
+          return null;
+        })(),
+        probeYoutubeDurationViaIframe(videoId)
+      ]);
+
+      if (oembedResult) {
+        title = oembedResult.title || "";
+        author = oembedResult.author_name || "";
       }
 
-      // 5. Fallback via YT IFrame Probe (rápido se incorporável)
-      if (!durationSeconds) {
-        durationSeconds = await probeYoutubeDurationViaIframe(videoId);
+      if (iframeDuration > 0) {
+        durationSeconds = iframeDuration;
+      }
+
+      // 2. Fallback rápido via NoEmbed (CORS habilitado) se ainda faltar título ou duração
+      if (!title || !durationSeconds) {
+        try {
+          const neRes = await fetchWithTimeout(
+            `https://noembed.com/embed?url=${encodeURIComponent(watchUrl)}`,
+            {},
+            2500
+          );
+          if (neRes.ok) {
+            const neData = await neRes.json();
+            if (!title && neData.title) title = neData.title;
+            if (!author && neData.author_name) author = neData.author_name;
+            if (!durationSeconds && neData.duration) {
+              durationSeconds = Math.round(Number(neData.duration) || 0);
+            }
+          }
+        } catch (e) {}
+      }
+
+      const cleanedTitle = cleanYoutubeTitle(title, author);
+
+      // 3. Fallback inteligente via Gemini AI (caso o clipe oficial bloqueie player externo)
+      if (!durationSeconds && cleanedTitle && isGeminiKeyConfigured()) {
+        durationSeconds = await fetchDurationViaGeminiFallback(cleanedTitle, author);
       }
 
       return {
         videoId,
         cleanUrl: watchUrl,
-        title: cleanYoutubeTitle(title, author) || `YouTube (${videoId})`,
+        title: cleanedTitle || `YouTube (${videoId})`,
         author,
         durationSeconds
       };
