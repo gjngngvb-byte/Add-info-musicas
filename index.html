@@ -3315,8 +3315,6 @@ Responda somente JSON válido no formato {"minutes": 3, "seconds": 45}. Se não 
         youtubePublishedAt: yt?.publishedAt || "",
         minutes: yt?.durationSeconds > 0 ? String(Math.floor(yt.durationSeconds / 60)) : t.minutes,
         seconds: yt?.durationSeconds > 0 ? String(yt.durationSeconds % 60) : t.seconds,
-        minutes: t.minutes,
-        seconds: t.seconds,
         type: t.type,
         style: t.style,
         info: t.info,
