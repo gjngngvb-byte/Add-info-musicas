@@ -58,7 +58,12 @@ module.exports = async function handler(req, res) {
       videos[item.id] = {
         durationSeconds: hours * 3600 + minutes * 60 + seconds,
         title: item.snippet?.title || "",
-        author: item.snippet?.channelTitle || ""
+        author: item.snippet?.channelTitle || "",
+        description: item.snippet?.description || "",
+        tags: Array.isArray(item.snippet?.tags) ? item.snippet.tags : [],
+        categoryId: item.snippet?.categoryId || "",
+        publishedAt: item.snippet?.publishedAt || "",
+        defaultLanguage: item.snippet?.defaultLanguage || item.snippet?.defaultAudioLanguage || ""
       };
     }
     return res.status(200).json({ videos });
