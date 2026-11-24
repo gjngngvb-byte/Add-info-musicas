@@ -240,7 +240,7 @@
               <span class="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400">Smart Match</span>
             </h2>
             <p class="text-xs text-slate-500 dark:text-slate-400">
-              Cole um link (ou vários) do YouTube: se a música já existir na lista, ela será preenchida; se não existir, será criada e preenchida automaticamente.
+              Cole um link (ou vários) do YouTube: se a música já existir na lista, o Gemini pergunta se quer substituir; se não existir, já cria tudo preenchido.
             </p>
           </div>
         </div>
@@ -249,7 +249,7 @@
           <button
             id="fill-missing-times-btn"
             onclick="fillMissingDurationsFromLinks()"
-            title="Buscar automaticamente os minutos e segundos de todas as faixas da lista que já possuem link do YouTube"
+            title="Buscar automaticamente os minutos e segundos reais do vídeo para todas as faixas com link do YouTube"
             class="px-3 py-1.5 rounded-xl text-xs font-semibold border border-emerald-300 dark:border-emerald-500/40 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/25 transition flex items-center gap-1.5 cursor-pointer"
           >
             <span>⏱ Preencher Tempos</span>
@@ -353,7 +353,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 text-xs">
           <div class="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/70">
             <strong class="text-rose-600 dark:text-rose-400 block mb-0.5">11. Smart Match YouTube</strong>
-            <span class="text-slate-600 dark:text-slate-400">Busca título, duração, tipo, estilo e atualiza se já existir na lista ou cria nova.</span>
+            <span class="text-slate-600 dark:text-slate-400">Busca título, duração real do vídeo, tipo, estilo e atualiza se já existir ou cria nova.</span>
           </div>
           <div class="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/70">
             <strong class="text-rose-600 dark:text-rose-400 block mb-0.5">12. Importação em Lote</strong>
@@ -728,7 +728,7 @@
       <div class="space-y-3 text-xs text-slate-600 dark:text-slate-300">
         <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-1">
           <strong class="text-rose-600 dark:text-rose-400 block">Como funciona o Link do YouTube?</strong>
-          <p>Ao colar qualquer link do YouTube (<code class="font-mono">youtube.com/watch?v=...</code>, <code class="font-mono">youtu.be/...</code>, <code class="font-mono">music.youtube.com</code> ou <code class="font-mono">shorts</code>), o sistema busca o título oficial, canal e duração exata (min/seg), detecta Tipo, Estilo, Vibe, Licença e Trecho (<code class="font-mono">?t=</code>), e compara com as músicas da sua lista. Se encontrar correspondência, preenche os campos dela; se não encontrar, adiciona uma nova faixa preenchida.</p>
+          <p>Ao colar qualquer link do YouTube (<code class="font-mono">youtube.com/watch?v=...</code>, <code class="font-mono">youtu.be/...</code>, <code class="font-mono">music.youtube.com</code> ou <code class="font-mono">shorts</code>), o sistema busca o título e a duração real do vídeo do link, e usa o Gemini API para descobrir e preencher os campos. Se a música já existir na lista, o Gemini pergunta se você quer substituir os valores diferentes.</p>
         </div>
 
         <div class="grid grid-cols-2 gap-2">
@@ -955,7 +955,7 @@
           <div>
             <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">Assistente Musical Gemini AI</h3>
             <p class="text-xs text-slate-500 dark:text-slate-400">
-              Analisa suas músicas, preenche campos vazios (tempo, BPM, estilo, licença, vibe, +info) e indica melhorias nos dados já preenchidos.
+              Descobre e preenche todas as músicas pelo título/link e pergunta se quer substituir quando já existir na lista.
             </p>
           </div>
         </div>
@@ -1002,7 +1002,7 @@
             Clique em <strong>"Analisar Lista com Gemini AI"</strong> para preencher todas as músicas de uma vez, ou clique em <strong>🤖 AI</strong> em qualquer faixa individual.
           </p>
           <p class="text-[11px] text-slate-400">
-            O Gemini preenche Tempo, Tipo, Estilo, BPM, Vibe, Energia, Licença real (Copyright vs. Creative Commons/Livre), +Info e aponta possíveis correções nos campos já preenchidos.
+            O Gemini preenche Tipo, Estilo, BPM, Vibe, Energia, Licença, +Info, respeita a duração real do vídeo do link e aponta alterações quando a faixa já existe.
           </p>
         </div>
       </div>
@@ -1022,7 +1022,7 @@
             onclick="applyAllAiStoredSuggestions(true)"
             class="hidden px-3.5 py-2 rounded-xl text-xs font-semibold bg-violet-600 hover:bg-violet-500 text-white transition cursor-pointer"
           >
-            Aceitar Todas as Alterações Indicadas
+            Substituir Todos os Existentes
           </button>
         </div>
 
@@ -1044,25 +1044,6 @@
        ESTADO INICIAL E ESTRUTURA DE DADOS
        ========================================================================= */
     const STORAGE_KEY = "tracksheet_studio_v3";
-
-    const DEFAULT_TITLES = [];
-
-    const LEGACY_DEFAULT_TITLES = new Set([
-      "Amy Winehouse - Back To Black",
-      "Animal Crossing New Leaf 1PM Soundtrack",
-      "Bakar - Hell N Back (Instrumental)",
-      "Caleb Arredondo - Echo Sax End",
-      "Dana and Alden - Dragonfly",
-      "Death of a Bluebird - Rorschach Roy",
-      "Gone, Gone / Thank You - Tyler, The Creator",
-      "i was only temporary",
-      "massobeats - honey jam",
-      "New Donk City - Super Mario Odyssey",
-      "Shaka Boom",
-      "Synthwave Goose - Blade Runner 2049",
-      "The Cannery - Kevin MacLeod",
-      "ჩუბინა"
-    ]);
 
     function createEmptyTrack(title = "", orderIndex = 0) {
       return {
@@ -1134,19 +1115,10 @@
         if (raw) {
           const parsed = JSON.parse(raw);
           if (Array.isArray(parsed)) {
-            const onlyLegacyDefaults =
-              parsed.length > 0 &&
-              parsed.every(t => LEGACY_DEFAULT_TITLES.has(String(t.title || "").trim()) && isTrackMetadataEmpty(t));
-
-            if (onlyLegacyDefaults) {
-              tracks = [];
-              saveState();
-            } else {
-              tracks = parsed.map((item, idx) => ({
-                ...createEmptyTrack("", idx),
-                ...item
-              }));
-            }
+            tracks = parsed.map((item, idx) => ({
+              ...createEmptyTrack("", idx),
+              ...item
+            }));
           }
         }
       } catch (err) {
@@ -1972,7 +1944,6 @@
 
       if (!title) return result;
 
-      // Tipo
       if (/\b(ost|soundtrack|theme|trilha|score|bgm)\b/.test(lower)) {
         result.type = "Trilha Sonora (OST)";
       } else if (/\b(remix|edit|flip|bootleg|mashup|slowed|reverb|sped up)\b/.test(lower)) {
@@ -1985,7 +1956,6 @@
         result.type = "Acapella";
       }
 
-      // Estilo
       if (/\b(animal crossing|mario|zelda|pokemon|sonic|undertale|game|nintendo|playstation|ost)\b/.test(lower)) {
         result.style = "Game OST";
       } else if (/\b(synthwave|retrowave|outrun|cyberpunk|blade runner|80s)\b/.test(lower)) {
@@ -2002,7 +1972,6 @@
         result.style = "Orquestral / Clássico";
       }
 
-      // Vibe / Mood
       if (/\b(sad|melancholy|cry|bluebird|temporary|alone|dark)\b/.test(lower)) {
         result.mood = "Melancólico";
       } else if (/\b(chill|relax|calm|sleep|study|honey|1pm|2pm)\b/.test(lower)) {
@@ -2013,7 +1982,6 @@
         result.mood = "Nostálgico";
       }
 
-      // Licença
       if (/\b(kevin macleod|incompetech|no copyright|ncs|royalty free|creative commons|massobeats)\b/.test(lower)) {
         result.license = "Royalty-Free / CC";
       }
@@ -2130,14 +2098,12 @@
     }
 
     function findBestMatchingTrack(ytTitle, videoId) {
-      // 1. Correspondência exata por ID do YouTube no link
       for (const track of tracks) {
         if (extractYoutubeVideoId(track.link) === videoId) {
           return track;
         }
       }
 
-      // 2. Correspondência por similaridade de título
       const normYt = normalizeForMatch(ytTitle);
       if (!normYt) return null;
       const ytTokens = new Set(normYt.split(" ").filter(w => w.length > 1));
@@ -2196,10 +2162,15 @@
       }
     }
 
-    async function fetchDurationViaGeminiFallback(cleanTitle, author = "") {
-      if (!isGeminiKeyConfigured() || !cleanTitle) return 0;
+    async function fetchVideoDurationViaGemini(cleanTitle, author = "", videoUrl = "") {
+      if (!isGeminiKeyConfigured() || (!cleanTitle && !videoUrl)) return 0;
       try {
-        const prompt = `Informe apenas a duração oficial em minutos e segundos da música "${cleanTitle}"${author ? ` (canal/artista: ${author})` : ""}. Responda somente JSON válido no formato {"minutes": 3, "seconds": 45}. Se não tiver certeza, retorne {"minutes": 0, "seconds": 0}.`;
+        const prompt = `Consulte o link e/ou título do vídeo abaixo e informe a duração EXATA em minutos e segundos DO PRÓPRIO VÍDEO DO LINK (se for versão slowed, reverb, edit, recorte ou remix, use a duração exata desse vídeo específico, e não a duração de outro álbum).
+${cleanTitle ? `Título: "${cleanTitle}"` : ""}
+${author ? `Canal: "${author}"` : ""}
+${videoUrl ? `Link do vídeo: ${videoUrl}` : ""}
+Responda somente JSON válido no formato {"minutes": 3, "seconds": 45}. Se não souber com certeza, retorne {"minutes": 0, "seconds": 0}.`;
+
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
         const res = await fetchWithTimeout(
           endpoint,
@@ -2208,10 +2179,11 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               contents: [{ parts: [{ text: prompt }] }],
+              tools: [{ google_search: {} }],
               generationConfig: { responseMimeType: "application/json", temperature: 0.1 }
             })
           },
-          4000
+          7000
         );
         if (!res.ok) return 0;
         const data = await res.json();
@@ -2231,7 +2203,7 @@
       let author = "";
       let durationSeconds = 0;
 
-      // 1. Executa em paralelo: oEmbed oficial (CORS nativo) + Sonda do Player oficial
+      // 1. oEmbed oficial + Sonda do Player oficial do link
       const [oembedResult, iframeDuration] = await Promise.all([
         (async () => {
           try {
@@ -2256,7 +2228,7 @@
         durationSeconds = iframeDuration;
       }
 
-      // 2. Fallback rápido via NoEmbed (CORS habilitado) se ainda faltar título ou duração
+      // 2. Fallback rápido via NoEmbed
       if (!title || !durationSeconds) {
         try {
           const neRes = await fetchWithTimeout(
@@ -2277,9 +2249,9 @@
 
       const cleanedTitle = cleanYoutubeTitle(title, author);
 
-      // 3. Fallback inteligente via Gemini AI (caso o clipe oficial bloqueie player externo)
-      if (!durationSeconds && cleanedTitle && isGeminiKeyConfigured()) {
-        durationSeconds = await fetchDurationViaGeminiFallback(cleanedTitle, author);
+      // 3. Consulta Gemini API com busca web para obter o tempo real do vídeo do link quando o player/oembed não retornou
+      if (!durationSeconds && isGeminiKeyConfigured()) {
+        durationSeconds = await fetchVideoDurationViaGemini(cleanedTitle, author, watchUrl);
       }
 
       return {
@@ -2316,7 +2288,7 @@
           } else {
             resolve(false);
           }
-        }, 3500);
+        }, 4500);
       });
     }
 
@@ -2333,26 +2305,46 @@
         const originParam = window.location.protocol.startsWith("http")
           ? `&origin=${encodeURIComponent(window.location.origin)}`
           : "";
-        slot.innerHTML = `<iframe id="${mountId}" width="112" height="64" src="https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=0&controls=0&mute=1${originParam}" allow="autoplay; encrypted-media"></iframe>`;
+        slot.innerHTML = `<iframe id="${mountId}" width="112" height="64" src="https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1&controls=0&mute=1${originParam}" allow="autoplay; encrypted-media"></iframe>`;
         slot.classList.remove("hidden");
 
         let player = null;
+        let pollTimer = null;
         const cleanup = (dur = 0) => {
           if (settled) return;
           settled = true;
+          if (pollTimer) clearInterval(pollTimer);
           try { if (player) player.destroy(); } catch (e) {}
           slot.innerHTML = "";
           slot.classList.add("hidden");
           resolve(dur);
         };
 
-        const timer = setTimeout(() => cleanup(0), 4000);
+        const timer = setTimeout(() => cleanup(0), 6500);
         const iframeEl = document.getElementById(mountId);
         if (!iframeEl) {
           clearTimeout(timer);
           cleanup(0);
           return;
         }
+
+        const startPollingDuration = targetPlayer => {
+          let attempts = 0;
+          pollTimer = setInterval(() => {
+            attempts++;
+            try {
+              const dur = Math.round(targetPlayer.getDuration() || 0);
+              if (dur > 0) {
+                clearTimeout(timer);
+                cleanup(dur);
+                return;
+              }
+            } catch (e) {}
+            if (attempts >= 18) {
+              clearInterval(pollTimer);
+            }
+          }, 250);
+        };
 
         iframeEl.onload = () => {
           if (settled) return;
@@ -2361,13 +2353,19 @@
               events: {
                 onReady: ev => {
                   try {
+                    ev.target.mute();
+                    ev.target.playVideo();
+                  } catch (e) {}
+                  startPollingDuration(ev.target);
+                },
+                onStateChange: ev => {
+                  try {
                     const dur = Math.round(ev.target.getDuration() || 0);
-                    clearTimeout(timer);
-                    cleanup(dur);
-                  } catch (e) {
-                    clearTimeout(timer);
-                    cleanup(0);
-                  }
+                    if (dur > 0) {
+                      clearTimeout(timer);
+                      cleanup(dur);
+                    }
+                  } catch (e) {}
                 },
                 onError: () => {
                   clearTimeout(timer);
@@ -2391,8 +2389,8 @@
       const meta = await fetchYoutubeMetadata(videoId);
       const inferred = inferMetadataFromTitle(meta.title);
 
-      const mins = meta.durationSeconds > 0 ? String(Math.floor(meta.durationSeconds / 60)) : "";
-      const secs = meta.durationSeconds > 0 ? String(meta.durationSeconds % 60) : "";
+      const videoMins = meta.durationSeconds > 0 ? String(Math.floor(meta.durationSeconds / 60)) : "";
+      const videoSecs = meta.durationSeconds > 0 ? String(meta.durationSeconds % 60) : "";
 
       const matched = findBestMatchingTrack(meta.title, videoId);
       let targetTrack = matched;
@@ -2401,9 +2399,9 @@
       if (matched) {
         if (!matched.title.trim()) matched.title = meta.title;
         if (!matched.link) matched.link = meta.cleanUrl;
-        if (!matched.minutes && !matched.seconds && (mins || secs)) {
-          matched.minutes = mins;
-          matched.seconds = secs;
+        if (!matched.minutes && !matched.seconds && (videoMins || videoSecs)) {
+          matched.minutes = videoMins;
+          matched.seconds = videoSecs;
         }
         if (!matched.type && inferred.type) matched.type = inferred.type;
         if (!matched.style && inferred.style) matched.style = inferred.style;
@@ -2414,8 +2412,8 @@
         const maxOrder = tracks.reduce((max, t) => Math.max(max, t.order), -1);
         const created = createEmptyTrack(meta.title, maxOrder + 1);
         created.link = meta.cleanUrl;
-        created.minutes = mins;
-        created.seconds = secs;
+        created.minutes = videoMins;
+        created.seconds = videoSecs;
         created.type = inferred.type;
         created.style = inferred.style;
         created.mood = inferred.mood;
@@ -2426,25 +2424,29 @@
         status = "created";
       }
 
-      // Completa automaticamente apenas os campos vazios via Gemini AI ao adicionar por link;
-      // se a música já existia na lista e houver sugestões diferentes para campos já preenchidos, pergunta ao usuário.
       if (targetTrack && isGeminiKeyConfigured()) {
         try {
           if (!silentToast) {
-            setYoutubeStatus(true, `Consultando Gemini AI para "${targetTrack.title}"...`);
+            setYoutubeStatus(true, `Descobrindo e preenchendo via Gemini API: "${targetTrack.title}"...`);
           }
-          const aiResults = await callGeminiApi([targetTrack]);
+          const aiResults = await callGeminiApi([{ ...targetTrack, link: targetTrack.link || meta.cleanUrl }]);
           const sug = aiResults.find(item => item && item.id === targetTrack.id) || aiResults[0];
           if (sug) {
+            // Prioriza sempre a duração real do vídeo do link quando disponível
+            if (videoMins || videoSecs) {
+              sug.minutes = videoMins;
+              sug.seconds = videoSecs;
+            }
             aiStoredResults[targetTrack.id] = { ...sug, id: targetTrack.id };
-            const aiFields = ["minutes", "seconds", "type", "style", "bpm", "mood", "energy", "license", "info"];
+
+            const aiFields = ["title", "minutes", "seconds", "type", "style", "bpm", "mood", "energy", "license", "info"];
             let hasConflictsOnExisting = false;
 
             aiFields.forEach(f => {
               const val = String(sug[f] || "").trim();
               if (!val) return;
               const curVal = String(targetTrack[f] || "").trim();
-              if (!curVal) {
+              if (!curVal || (f === "title" && curVal.startsWith("YouTube ("))) {
                 targetTrack[f] = val;
               } else if (status === "matched" && curVal.toLowerCase() !== val.toLowerCase()) {
                 hasConflictsOnExisting = true;
@@ -2463,9 +2465,9 @@
 
       if (!silentToast) {
         if (status === "matched") {
-          showToast(`Música já estava na lista: campos vazios preenchidos (confira sugestões de alteração no Gemini AI).`, "info");
+          showToast(`Música já estava na lista: campos preenchidos e diferenças enviadas ao Gemini.`, "info");
         } else {
-          showToast(`Adicionada e preenchida com AI: "${targetTrack.title}"`, "success");
+          showToast(`Adicionada e preenchida via Gemini API: "${targetTrack.title}"`, "success");
         }
       }
 
@@ -2555,9 +2557,9 @@
     }
 
     async function fillMissingDurationsFromLinks() {
-      const targets = tracks.filter(t => extractYoutubeVideoId(t.link) && getTrackDurationSeconds(t) <= 0);
+      const targets = tracks.filter(t => extractYoutubeVideoId(t.link));
       if (targets.length === 0) {
-        showToast("Todas as faixas com link do YouTube já possuem tempo!", "info");
+        showToast("Nenhuma faixa da lista possui link do YouTube.", "info");
         return;
       }
 
@@ -2570,7 +2572,7 @@
         for (let i = 0; i < targets.length; i++) {
           const t = targets[i];
           const vid = extractYoutubeVideoId(t.link);
-          setYoutubeStatus(true, `Buscando tempo (${i + 1}/${targets.length}): ${t.title || vid}...`);
+          setYoutubeStatus(true, `Buscando tempo real do vídeo (${i + 1}/${targets.length}): ${t.title || vid}...`);
           const meta = await fetchYoutubeMetadata(vid);
           if (meta.durationSeconds > 0) {
             t.minutes = String(Math.floor(meta.durationSeconds / 60));
@@ -2580,7 +2582,7 @@
         }
         saveState();
         renderTracks();
-        showToast(`${updated} tempo(s) preenchido(s) automaticamente.`, updated > 0 ? "success" : "info");
+        showToast(`${updated} tempo(s) atualizado(s) direto do vídeo do link.`, updated > 0 ? "success" : "info");
       } finally {
         if (btn) btn.disabled = false;
         setYoutubeStatus(false);
@@ -2814,7 +2816,6 @@
         return lines.join("\n").trim();
       }
 
-      // Formato padrão: .TXT
       const lines = [];
       if (includeHeader) {
         lines.push(`LISTA DE MÚSICAS (${list.length} faixas | Tempo Total: ${formatTotalSeconds(totalSecs)})`);
@@ -2950,7 +2951,6 @@
       const text = String(rawText || "").trim();
       if (!text) return [];
 
-      // 1. Tenta JSON
       if (text.startsWith("[") || text.startsWith("{")) {
         try {
           const json = JSON.parse(text);
@@ -2976,12 +2976,9 @@
               };
             }).filter(x => x.title);
           }
-        } catch (e) {
-          // Segue para CSV / TXT / MD
-        }
+        } catch (e) {}
       }
 
-      // 2. Tenta CSV
       const firstLine = text.split(/\r?\n/)[0] || "";
       if (firstLine.includes(",") && /musica|title/i.test(firstLine)) {
         const lines = text.split(/\r?\n/).filter(Boolean);
@@ -3047,7 +3044,6 @@
         }
       }
 
-      // 3. Parse TXT / Markdown estruturado
       const lines = text.split(/\r?\n/);
       const parsedItems = [];
       let current = null;
@@ -3238,15 +3234,20 @@
         cue: t.cue,
         energy: t.energy,
         license: t.license,
-        link: t.link
+        link: t.link || "",
+        status: t.status || ""
       }));
 
-      const prompt = `Você é um especialista em catalogação musical e direitos autorais.
-Analise a lista de faixas abaixo e retorne um JSON válido (array de objetos), um para cada faixa com o mesmo "id".
+      const prompt = `Você é um especialista em catalogação musical, pesquisa de links e direitos autorais.
+Para CADA faixa da lista abaixo, use o título e/ou o link ("link") fornecido para descobrir a faixa real, buscar suas informações precisas na web e preencher TODOS os campos de TODAS as músicas.
+Importante: se "minutes" e "seconds" já estiverem preenchidos ou se o link indicar um vídeo específico (como slowed, reverb, edit, recorte ou remix), mantenha a duração real desse vídeo do link em vez de substituir por duração genérica de álbum.
+Retorne um JSON válido (array de objetos), um para cada faixa com o mesmo "id".
+
 Para cada faixa, preencha com precisão:
 - "id": string (mesmo id enviado)
-- "minutes": string (minutos da versão oficial da música, apenas número, se souber)
-- "seconds": string (segundos 0-59 da versão oficial, apenas número, se souber)
+- "title": string (nome completo e limpo da música, ex: "Artista - Música", caso o título esteja vazio ou seja apenas ID/link)
+- "minutes": string (minutos da faixa/vídeo, apenas número)
+- "seconds": string (segundos 0-59 da faixa/vídeo, apenas número)
 - "type": string ("Vocal", "Instrumental", "Trilha Sonora (OST)", "Lo-Fi / Beat", "Remix / Edit" ou "Acapella")
 - "style": string (gênero musical principal em português, ex: "Soul / Jazz", "Game OST", "Synthwave / Retrowave", "Hip-Hop / Rap")
 - "bpm": string (BPM aproximado em número inteiro, ex: "105")
@@ -3254,9 +3255,9 @@ Para cada faixa, preencha com precisão:
 - "energy": string ("1", "2", "3", "4" ou "5")
 - "license": string (status real de direitos autorais: "Copyright (Gravadora)", "Creative Commons / CC", "Royalty-Free / OST" ou "Domínio Público")
 - "info": string (nota curta e útil em português: artista, álbum/jogo e ano de lançamento)
-- "reason": string (breve justificativa em português se algum campo já preenchido pelo usuário parecer incorreto e você sugerir alteração; caso contrário, string vazia "")
+- "reason": string (breve justificativa em português se algum campo já preenchido pelo usuário parecer diferente ou precisar de confirmação; caso contrário, string vazia "")
 
-Faixas para analisar:
+Faixas para analisar e preencher:
 ${JSON.stringify(payloadTracks)}`;
 
       const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
@@ -3266,6 +3267,7 @@ ${JSON.stringify(payloadTracks)}`;
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
+          tools: [{ google_search: {} }],
           generationConfig: {
             responseMimeType: "application/json",
             temperature: 0.2
@@ -3294,7 +3296,7 @@ ${JSON.stringify(payloadTracks)}`;
       const autoFillEmpty = document.getElementById("ai-auto-fill-empty-chk")?.checked ?? true;
 
       const candidates = tracks.filter(t => {
-        if (!t.title.trim()) return false;
+        if (!t.title.trim() && !String(t.link || "").trim()) return false;
         if (!onlyIncomplete) return true;
         return !t.minutes || !t.type || !t.style || !t.bpm || !t.mood || !t.license || !t.info;
       });
@@ -3331,13 +3333,13 @@ ${JSON.stringify(payloadTracks)}`;
 
     async function analyzeSingleTrackWithGemini(trackId) {
       const track = tracks.find(t => t.id === trackId);
-      if (!track || !track.title.trim()) {
-        showToast("Preencha o nome da música primeiro.", "info");
+      if (!track || (!track.title.trim() && !String(track.link || "").trim())) {
+        showToast("Preencha o nome ou o link da música primeiro.", "info");
         return;
       }
 
       openAiHubModal();
-      setAiProgress(true, `Analisando "${track.title}" com Gemini AI...`);
+      setAiProgress(true, `Analisando "${track.title || track.link}" com Gemini AI...`);
 
       try {
         const results = await callGeminiApi([track]);
@@ -3443,7 +3445,7 @@ ${JSON.stringify(payloadTracks)}`;
                   <button
                     onclick="applySingleAiSuggestion('${track.id}', true)"
                     class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-violet-600 hover:bg-violet-500 text-white cursor-pointer"
-                  >Aceitar Tudo</button>
+                  >Substituir Existentes</button>
                 </div>
               </div>
               <div class="flex flex-wrap gap-1.5 text-[11px]">${badges}</div>
@@ -3464,13 +3466,13 @@ ${JSON.stringify(payloadTracks)}`;
       if (!sug || !track) return;
 
       if (!silent) pushUndo();
-      const fields = ["minutes", "seconds", "type", "style", "bpm", "mood", "energy", "license", "info"];
+      const fields = ["title", "minutes", "seconds", "type", "style", "bpm", "mood", "energy", "license", "info"];
       let count = 0;
 
       fields.forEach(f => {
         const val = String(sug[f] || "").trim();
         if (!val) return;
-        if (overwriteExisting || !String(track[f] || "").trim()) {
+        if (overwriteExisting || !String(track[f] || "").trim() || (f === "title" && String(track[f] || "").startsWith("YouTube ("))) {
           track[f] = val;
           count++;
         }
