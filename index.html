@@ -2250,9 +2250,11 @@ Responda somente JSON válido no formato {"minutes": 3, "seconds": 45}. Se não 
         author = officialMetadata.author || "";
       }
 
-      // Complementa título/canal e usa player/NoEmbed apenas como fallback.
+      // A Data API é a fonte prioritária. oEmbed/player só complementam dados ausentes.
+      const officialHasTitle = Boolean(title);
+      const officialHasDuration = durationSeconds > 0;
       const [oembedResult, iframeDuration] = await Promise.all([
-        (async () => {
+        (!officialHasTitle ? (async () => {
           try {
             const res = await fetchWithTimeout(
               `https://www.youtube.com/oembed?url=${encodeURIComponent(watchUrl)}&format=json`,
@@ -2262,16 +2264,16 @@ Responda somente JSON válido no formato {"minutes": 3, "seconds": 45}. Se não 
             if (res.ok) return await res.json();
           } catch (e) {}
           return null;
-        })(),
-        probeYoutubeDurationViaIframe(videoId)
+        })() : Promise.resolve(null)),
+        (!officialHasDuration ? probeYoutubeDurationViaIframe(videoId) : Promise.resolve(0))
       ]);
 
       if (oembedResult) {
-        title = oembedResult.title || "";
-        author = oembedResult.author_name || "";
+        if (!title) title = oembedResult.title || "";
+        if (!author) author = oembedResult.author_name || "";
       }
 
-      if (iframeDuration > 0) {
+      if (!officialHasDuration && iframeDuration > 0) {
         durationSeconds = iframeDuration;
       }
 
@@ -2296,15 +2298,17 @@ Responda somente JSON válido no formato {"minutes": 3, "seconds": 45}. Se não 
 
       const cleanedTitle = cleanYoutubeTitle(title, author);
 
-      // A duração é obtida pelo player do YouTube/oEmbed/NoEmbed.
-      // Não fazemos uma chamada Gemini separada por vídeo: a análise em lote
-      // reúne todas as faixas em uma única solicitação.
       return {
         videoId,
         cleanUrl: watchUrl,
         title: cleanedTitle || `YouTube (${videoId})`,
         author,
-        durationSeconds
+        durationSeconds,
+        description: officialMetadata?.description || "",
+        tags: officialMetadata?.tags || [],
+        categoryId: officialMetadata?.categoryId || "",
+        publishedAt: officialMetadata?.publishedAt || "",
+        defaultLanguage: officialMetadata?.defaultLanguage || ""
       };
     }
 
@@ -2484,7 +2488,7 @@ Responda somente JSON válido no formato {"minutes": 3, "seconds": 45}. Se não 
             }
             aiStoredResults[targetTrack.id] = { ...sug, id: targetTrack.id };
 
-            const aiFields = ["title", "minutes", "seconds", "type", "style", "bpm", "mood", "energy", "license", "info"];
+            const aiFields = ["type", "style", "bpm", "mood", "energy", "license", "info"];
             let hasConflictsOnExisting = false;
 
             aiFields.forEach(f => {
@@ -3292,9 +3296,25 @@ Responda somente JSON válido no formato {"minutes": 3, "seconds": 45}. Se não 
         throw new Error("MISSING_SECRET");
       }
 
-      const payloadTracks = targetTracks.map(t => ({
+      // Garante que dados disponíveis na YouTube Data API sejam carregados antes do Gemini.
+      const linkedTracks = targetTracks.filter(t => extractYoutubeVideoId(t.link));
+      if (linkedTracks.length) {
+        await fetchYoutubeMetadataBatch(linkedTracks.map(t => extractYoutubeVideoId(t.link)));
+      }
+
+      const payloadTracks = targetTracks.map(t => {
+        const videoId = extractYoutubeVideoId(t.link);
+        const yt = videoId ? youtubeMetadataCache.get(videoId) : null;
+        return ({
         id: t.id,
-        title: t.title,
+        title: yt?.title || t.title,
+        youtubeChannel: yt?.author || "",
+        youtubeDescription: yt?.description || "",
+        youtubeTags: yt?.tags || [],
+        youtubeCategoryId: yt?.categoryId || "",
+        youtubePublishedAt: yt?.publishedAt || "",
+        minutes: yt?.durationSeconds > 0 ? String(Math.floor(yt.durationSeconds / 60)) : t.minutes,
+        seconds: yt?.durationSeconds > 0 ? String(yt.durationSeconds % 60) : t.seconds,
         minutes: t.minutes,
         seconds: t.seconds,
         type: t.type,
@@ -3307,18 +3327,20 @@ Responda somente JSON válido no formato {"minutes": 3, "seconds": 45}. Se não 
         license: t.license,
         link: t.link || "",
         status: t.status || ""
-      }));
+      });
+      });
 
       const prompt = `Você é um especialista em catalogação musical, pesquisa de links e direitos autorais.
-Para CADA faixa da lista abaixo, use o título e/ou o link ("link") fornecido para descobrir a faixa real, buscar suas informações precisas na web e preencher TODOS os campos de TODAS as músicas.
-Importante: se "minutes" e "seconds" já estiverem preenchidos ou se o link indicar um vídeo específico (como slowed, reverb, edit, recorte ou remix), mantenha a duração real desse vídeo do link em vez de substituir por duração genérica de álbum.
+Para CADA faixa, preencha somente os campos musicais que não podem ser obtidos diretamente da YouTube Data API.
+REGRA DE PRIORIDADE ABSOLUTA: quando houver link do YouTube, os dados youtubeTitle/title, youtubeChannel, youtubeDescription, youtubeTags, youtubeCategoryId, youtubePublishedAt, minutes e seconds fornecidos no objeto são dados da YouTube Data API. Considere-os fonte da verdade. NÃO invente, corrija, substitua ou pesquise novamente o título do vídeo nem sua duração. Preserve title, minutes e seconds exatamente como recebidos.
+Use o título, canal, descrição e tags do YouTube como contexto para descobrir artista, álbum/jogo, BPM, gênero, tipo, vibe, energia, licença e informações adicionais. Só preencha esses campos restantes.
 Retorne um JSON válido (array de objetos), um para cada faixa com o mesmo "id".
 
 Para cada faixa, preencha com precisão:
 - "id": string (mesmo id enviado)
-- "title": string (nome completo e limpo da música, ex: "Artista - Música", caso o título esteja vazio ou seja apenas ID/link)
-- "minutes": string (minutos da faixa/vídeo, apenas número)
-- "seconds": string (segundos 0-59 da faixa/vídeo, apenas número)
+- "title": preserve exatamente o título recebido; não tente alterá-lo
+- "minutes": preserve exatamente os minutos recebidos; não tente alterá-los
+- "seconds": preserve exatamente os segundos recebidos; não tente alterá-los
 - "type": string ("Vocal", "Instrumental", "Trilha Sonora (OST)", "Lo-Fi / Beat", "Remix / Edit" ou "Acapella")
 - "style": string (gênero musical principal em português, ex: "Soul / Jazz", "Game OST", "Synthwave / Retrowave", "Hip-Hop / Rap")
 - "bpm": string (BPM aproximado em número inteiro, ex: "105")
@@ -3480,8 +3502,6 @@ ${JSON.stringify(payloadTracks)}`;
           if (!track) return "";
 
           const fieldsMap = [
-            { key: "minutes", label: "Min" },
-            { key: "seconds", label: "Seg" },
             { key: "type", label: "Tipo" },
             { key: "style", label: "Estilo" },
             { key: "bpm", label: "BPM" },
@@ -3544,7 +3564,7 @@ ${JSON.stringify(payloadTracks)}`;
       if (!sug || !track) return;
 
       if (!silent) pushUndo();
-      const fields = ["title", "minutes", "seconds", "type", "style", "bpm", "mood", "energy", "license", "info"];
+      const fields = ["type", "style", "bpm", "mood", "energy", "license", "info"];
       let count = 0;
 
       fields.forEach(f => {
