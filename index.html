@@ -2327,47 +2327,56 @@
       return new Promise(resolve => {
         let settled = false;
         const mountId = "probe_" + videoId + "_" + Math.random().toString(36).slice(2, 6);
-        slot.innerHTML = `<div id="${mountId}"></div>`;
+        const originParam = window.location.protocol.startsWith("http")
+          ? `&origin=${encodeURIComponent(window.location.origin)}`
+          : "";
+        slot.innerHTML = `<iframe id="${mountId}" width="112" height="64" src="https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=0&controls=0&mute=1${originParam}" allow="autoplay; encrypted-media"></iframe>`;
         slot.classList.remove("hidden");
 
+        let player = null;
         const cleanup = (dur = 0) => {
           if (settled) return;
           settled = true;
-          try { player.destroy(); } catch (e) {}
+          try { if (player) player.destroy(); } catch (e) {}
           slot.innerHTML = "";
           slot.classList.add("hidden");
           resolve(dur);
         };
 
         const timer = setTimeout(() => cleanup(0), 4000);
-
-        const playerVars = { autoplay: 0, controls: 0, mute: 1 };
-        if (window.location.protocol.startsWith("http")) {
-          playerVars.origin = window.location.origin;
+        const iframeEl = document.getElementById(mountId);
+        if (!iframeEl) {
+          clearTimeout(timer);
+          cleanup(0);
+          return;
         }
 
-        const player = new YT.Player(mountId, {
-          height: "64",
-          width: "112",
-          videoId,
-          playerVars,
-          events: {
-            onReady: ev => {
-              try {
-                const dur = Math.round(ev.target.getDuration() || 0);
-                clearTimeout(timer);
-                cleanup(dur);
-              } catch (e) {
-                clearTimeout(timer);
-                cleanup(0);
+        iframeEl.onload = () => {
+          if (settled) return;
+          try {
+            player = new YT.Player(mountId, {
+              events: {
+                onReady: ev => {
+                  try {
+                    const dur = Math.round(ev.target.getDuration() || 0);
+                    clearTimeout(timer);
+                    cleanup(dur);
+                  } catch (e) {
+                    clearTimeout(timer);
+                    cleanup(0);
+                  }
+                },
+                onError: () => {
+                  clearTimeout(timer);
+                  cleanup(0);
+                }
               }
-            },
-            onError: () => {
-              clearTimeout(timer);
-              cleanup(0);
-            }
+            });
+          } catch (e) {
+            clearTimeout(timer);
+            cleanup(0);
           }
-        });
+        };
       });
     }
 
@@ -2570,66 +2579,21 @@
         miniPlayerInstance = null;
       }
 
+      const originParam = window.location.protocol.startsWith("http")
+        ? `&origin=${encodeURIComponent(window.location.origin)}`
+        : "";
+
       if (mountEl) {
-        mountEl.innerHTML = `<div id="yt-mini-iframe-target" class="w-full h-full"></div>`;
+        mountEl.innerHTML = `<iframe id="yt-mini-iframe-target" class="w-full h-full" src="https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1&rel=0${originParam}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
       }
 
-      const playerVars = { autoplay: 1, rel: 0 };
-      if (window.location.protocol.startsWith("http")) {
-        playerVars.origin = window.location.origin;
-      }
-
-      miniPlayerInstance = new YT.Player("yt-mini-iframe-target", {
-        height: "100%",
-        width: "100%",
-        videoId,
-        playerVars
-      });
-    }
-
-    function closeMiniPlayer() {
-      const card = document.getElementById("yt-mini-player-card");
-      if (card) card.classList.add("hidden");
-      if (miniPlayerInstance) {
-        try { miniPlayerInstance.destroy(); } catch (e) {}
-        miniPlayerInstance = null;
-      }
-      activeMiniPlayerTrackId = null;
-      renderTracks();
-    }
-
-    function capturePlayerTimeToTrack(mode) {
-      if (!activeMiniPlayerTrackId || !miniPlayerInstance) {
-        showToast("Abra uma faixa no Mini-Player primeiro.", "info");
-        return;
-      }
-      const track = tracks.find(t => t.id === activeMiniPlayerTrackId);
-      if (!track) return;
-
-      try {
-        if (mode === "duration") {
-          const total = Math.round(miniPlayerInstance.getDuration() || 0);
-          if (total <= 0) {
-            showToast("Aguarde o vídeo carregar para capturar a duração.", "info");
-            return;
-          }
-          pushUndo();
-          track.minutes = String(Math.floor(total / 60));
-          track.seconds = String(total % 60);
-          saveState();
-          renderTracks();
-          showToast(`Duração (${track.minutes}:${String(track.seconds).padStart(2, "0")}) salva!`, "success");
-        } else if (mode === "cue") {
-          const current = Math.round(miniPlayerInstance.getCurrentTime() || 0);
-          pushUndo();
-          track.cue = secondsToMMSS(current);
-          track.showExtras = true;
-          saveState();
-          renderTracks();
-          showToast(`Cue (${track.cue}) marcado na faixa!`, "success");
-        }
-      } catch (e) {
-        showToast("Não foi possível ler o tempo do player.", "error");
+      const miniIframe = document.getElementById("yt-mini-iframe-target");
+      if (miniIframe) {
+        miniIframe.onload = () => {
+          try {
+            miniPlayerInstance = new YT.Player("yt-mini-iframe-target");
+          } catch (e) {}
+        };
       }
     }
 
